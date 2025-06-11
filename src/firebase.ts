@@ -33,7 +33,8 @@ export interface CoffeeActivity extends BaseActivity {
 export interface AnxietyActivity extends BaseActivity {
   type: 'anxiety';
   data: {
-    level: number;
+    intensity: number;  // 1-5 scale
+    thought?: string;   // Optional anxious thought
   };
 }
 
@@ -60,6 +61,22 @@ export async function addActivity(activity: Omit<Activity, 'id' | 'createdAt'>) 
     console.error('Error adding activity:', error);
     throw error;
   }
+}
+
+// Add anxiety thought
+export async function addAnxietyThought(
+  intensity: number,
+  thought?: string,
+  timestamp: Date = new Date()
+): Promise<string> {
+  return addActivity({
+    type: 'anxiety',
+    timestamp,
+    data: {
+      intensity,
+      thought
+    }
+  });
 }
 
 // Get today's activities

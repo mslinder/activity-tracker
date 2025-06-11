@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { addActivity, getTodaysActivities } from './firebase';
-import type { Activity, CoffeeActivity } from './firebase.ts';
+import type { Activity, CoffeeActivity, AnxietyActivity } from './firebase.ts';
+import AnxietyLogger from './AnxietyLogger';
 
 function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [showCoffeeModal, setShowCoffeeModal] = useState(false);
+  const [showAnxietyModal, setShowAnxietyModal] = useState(false);
   const [coffeeForm, setCoffeeForm] = useState({
     coffeeType: 'Espresso' as const,
     amount: 1,
@@ -110,20 +112,12 @@ function App() {
     }
   };
 
-  const handleAddAnxiety = async () => {
-    const level = prompt('Anxiety level (1-10):');
-    if (!level || isNaN(Number(level))) return;
+  const handleOpenAnxietyModal = () => {
+    setShowAnxietyModal(true);
+  };
 
-    try {
-      await addActivity({
-        type: 'anxiety',
-        timestamp: new Date(),
-        data: { level: Number(level) }
-      });
-      loadActivities();
-    } catch (err) {
-      setError('Failed to add anxiety');
-    }
+  const handleCloseAnxietyModal = () => {
+    setShowAnxietyModal(false);
   };
 
   const handleAddExercise = async () => {
@@ -157,8 +151,8 @@ function App() {
       <button onClick={handleOpenCoffeeModal} style={{ marginRight: '10px' }}>
         Add Coffee Details
       </button>
-      <button onClick={handleAddAnxiety} style={{ marginRight: '10px' }}>
-        Add Anxiety
+      <button onClick={handleOpenAnxietyModal} style={{ marginRight: '10px' }}>
+        Log Anxious Thought
       </button>
       <button onClick={handleAddExercise} style={{ marginRight: '10px' }}>
         Add Exercise
@@ -178,7 +172,13 @@ function App() {
               )}
               {activity.type === 'anxiety' && (
                 <>
-                  <strong>Anxiety</strong> - {activity.timestamp.toLocaleTimeString()} (Level {activity.data.level})
+                  <strong>Anxiety</strong> - {activity.timestamp.toLocaleTimeString()} 
+                  (Intensity: {(activity as AnxietyActivity).data.intensity}/5)
+                  {(activity as AnxietyActivity).data.thought && 
+                    <span style={{ display: 'block', marginLeft: '20px', fontSize: '0.9em', color: '#666' }}>
+                      "{(activity as AnxietyActivity).data.thought}"
+                    </span>
+                  }
                 </>
               )}
               {activity.type === 'exercise' && (
@@ -310,6 +310,14 @@ function App() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Anxiety Logger Modal */}
+      {showAnxietyModal && (
+        <AnxietyLogger
+          onClose={handleCloseAnxietyModal}
+          onSave={loadActivities}
+        />
       )}
     </div>
   );
