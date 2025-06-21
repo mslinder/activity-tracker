@@ -66,16 +66,16 @@ const AnxietyLogger: React.FC<AnxietyLoggerProps> = ({ onClose, onSave }) => {
       zIndex: 1000
     }}>
       <div style={{
-        backgroundColor: 'white',
+        backgroundColor: '#ffffff',
         padding: '20px',
         borderRadius: '5px',
         width: '350px',
         maxWidth: '90%'
       }}>
-        <h2>Log Anxious Thought</h2>
+        <h2 style={{ color: '#000' }}>Log Anxious Thought</h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
+            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: '#000' }}>
               Intensity:
             </label>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
@@ -106,7 +106,8 @@ const AnxietyLogger: React.FC<AnxietyLoggerProps> = ({ onClose, onSave }) => {
               display: 'flex', 
               justifyContent: 'space-between', 
               fontSize: '12px',
-              color: '#666',
+              color: '#444',
+              fontWeight: 'bold',
               marginTop: '5px'
             }}>
               <span>Mild</span>
@@ -114,7 +115,8 @@ const AnxietyLogger: React.FC<AnxietyLoggerProps> = ({ onClose, onSave }) => {
             </div>
             <div style={{ 
               fontSize: '14px',
-              color: '#666',
+              color: '#444',
+              fontWeight: 'bold',
               marginTop: '10px',
               textAlign: 'center'
             }}>
@@ -123,7 +125,7 @@ const AnxietyLogger: React.FC<AnxietyLoggerProps> = ({ onClose, onSave }) => {
           </div>
           
           <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#000' }}>
               Thought (optional):
               <textarea 
                 value={thought}
@@ -134,7 +136,8 @@ const AnxietyLogger: React.FC<AnxietyLoggerProps> = ({ onClose, onSave }) => {
                   padding: '8px', 
                   marginTop: '5px',
                   borderRadius: '4px',
-                  border: '1px solid #ccc',
+                  border: '1px solid #757575',
+                  backgroundColor: '#ffffff',
                   minHeight: '80px',
                   resize: 'vertical'
                 }}
@@ -143,7 +146,7 @@ const AnxietyLogger: React.FC<AnxietyLoggerProps> = ({ onClose, onSave }) => {
           </div>
           
           <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#000' }}>
               Time:
               <input 
                 type="datetime-local" 
@@ -154,7 +157,8 @@ const AnxietyLogger: React.FC<AnxietyLoggerProps> = ({ onClose, onSave }) => {
                   padding: '8px', 
                   marginTop: '5px',
                   borderRadius: '4px',
-                  border: '1px solid #ccc'
+                  border: '1px solid #757575',
+                  backgroundColor: '#ffffff'
                 }}
               />
             </label>
@@ -168,8 +172,9 @@ const AnxietyLogger: React.FC<AnxietyLoggerProps> = ({ onClose, onSave }) => {
               onClick={onClose}
               style={{
                 padding: '10px 15px',
-                backgroundColor: '#f0f0f0',
-                border: '1px solid #ccc',
+                backgroundColor: '#e0e0e0',
+                border: '1px solid #757575',
+                color: '#000',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontWeight: 'bold'

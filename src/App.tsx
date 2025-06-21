@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { addActivity, getTodaysActivities } from './firebase';
 import type { Activity, CoffeeActivity, AnxietyActivity } from './firebase.ts';
 import AnxietyLogger from './AnxietyLogger';
+import CoffeeLogger from './CoffeeLogger';
+import ExerciseDashboard from './components/ExerciseDashboard';
+import WorkoutImporter from './components/WorkoutImporter';
 
 function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -9,10 +12,32 @@ function App() {
   const [error, setError] = useState<string>('');
   const [showCoffeeModal, setShowCoffeeModal] = useState(false);
   const [showAnxietyModal, setShowAnxietyModal] = useState(false);
+  const [showWorkoutImporter, setShowWorkoutImporter] = useState(false);
+  const [currentView, setCurrentView] = useState<'activities' | 'exercises'>('activities');
+  // Helper function to get current time in PST
+  const getCurrentPSTTime = () => {
+    // Simply return the current time as we're already in PST
+    // This works because the user is in PST timezone
+    return new Date();
+  };
+  
+  // Format date for datetime-local input in PST timezone
+  const formatDateTimeForInput = (date: Date) => {
+    // Get the date components in PST timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    // Format as YYYY-MM-DDThh:mm (required format for datetime-local input)
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const [coffeeForm, setCoffeeForm] = useState({
     coffeeType: 'Espresso' as const,
     amount: 1,
-    timestamp: new Date()
+    timestamp: getCurrentPSTTime()
   });
 
   // Load today's activities
@@ -37,7 +62,7 @@ function App() {
     try {
       await addActivity({
         type: 'coffee',
-        timestamp: new Date(),
+        timestamp: getCurrentPSTTime(),
         data: {
           coffeeType: 'Espresso',
           amount: 1
@@ -53,7 +78,7 @@ function App() {
     setCoffeeForm({
       coffeeType: 'Espresso' as const,
       amount: 1,
-      timestamp: new Date()
+      timestamp: getCurrentPSTTime()
     });
     setShowCoffeeModal(true);
   };
@@ -144,172 +169,138 @@ function App() {
       
       {error && <div style={{ color: 'red' }}>Error: {error}</div>}
       
-      <h2>Quick Log</h2>
-      <button onClick={handleQuickAddCoffee} style={{ marginRight: '10px' }}>
-        Quick Coffee ☕
-      </button>
-      <button onClick={handleOpenCoffeeModal} style={{ marginRight: '10px' }}>
-        Add Coffee Details
-      </button>
-      <button onClick={handleOpenAnxietyModal} style={{ marginRight: '10px' }}>
-        Log Anxious Thought
-      </button>
-      <button onClick={handleAddExercise} style={{ marginRight: '10px' }}>
-        Add Exercise
-      </button>
+      {/* Navigation Tabs */}
+      <div style={{ 
+        display: 'flex', 
+        marginBottom: '20px', 
+        borderBottom: '1px solid #ccc'
+      }}>
+        <button 
+          onClick={() => setCurrentView('activities')}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: currentView === 'activities' ? '#4CAF50' : '#f0f0f0',
+            color: currentView === 'activities' ? 'white' : 'black',
+            border: 'none',
+            borderRadius: '4px 4px 0 0',
+            cursor: 'pointer',
+            marginRight: '5px'
+          }}
+        >
+          Activities
+        </button>
+        <button 
+          onClick={() => setCurrentView('exercises')}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: currentView === 'exercises' ? '#4CAF50' : '#f0f0f0',
+            color: currentView === 'exercises' ? 'white' : 'black',
+            border: 'none',
+            borderRadius: '4px 4px 0 0',
+            cursor: 'pointer'
+          }}
+        >
+          Exercises
+        </button>
+      </div>
       
-      <h2>Today's Activities ({activities.length})</h2>
-      {activities.length === 0 ? (
-        <p>No activities logged today</p>
-      ) : (
-        <ul>
-          {activities.map((activity) => (
-            <li key={activity.id}>
-              {activity.type === 'coffee' && (
-                <>
-                  <strong>☕ {(activity as CoffeeActivity).data.coffeeType}</strong> ({(activity as CoffeeActivity).data.amount}) - {activity.timestamp.toLocaleTimeString()}
-                </>
-              )}
-              {activity.type === 'anxiety' && (
-                <>
-                  <strong>Anxiety</strong> - {activity.timestamp.toLocaleTimeString()} 
-                  (Intensity: {(activity as AnxietyActivity).data.intensity}/5)
-                  {(activity as AnxietyActivity).data.thought && 
-                    <span style={{ display: 'block', marginLeft: '20px', fontSize: '0.9em', color: '#666' }}>
-                      "{(activity as AnxietyActivity).data.thought}"
-                    </span>
-                  }
-                </>
-              )}
-              {activity.type === 'exercise' && (
-                <>
-                  <strong>Exercise</strong> - {activity.timestamp.toLocaleTimeString()} ({activity.data.name})
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+      {currentView === 'activities' && (
+        <>
+          <h2>Quick Log</h2>
+          <button onClick={handleQuickAddCoffee} style={{ marginRight: '10px' }}>
+            Quick Coffee ☕
+          </button>
+          <button onClick={handleOpenCoffeeModal} style={{ marginRight: '10px' }}>
+            Add Coffee Details
+          </button>
+          <button onClick={handleOpenAnxietyModal} style={{ marginRight: '10px' }}>
+            Log Anxious Thought
+          </button>
+          <button onClick={handleAddExercise} style={{ marginRight: '10px' }}>
+            Add Exercise
+          </button>
+        </>
       )}
       
-      <hr />
-      <p>Firebase Status: {error ? '❌ Error' : '✅ Connected'}</p>
+      {currentView === 'exercises' && (
+        <div style={{ marginBottom: '20px' }}>
+          <button 
+            onClick={() => setShowWorkoutImporter(!showWorkoutImporter)}
+            style={{
+              padding: '8px 15px',
+              backgroundColor: '#2196F3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            {showWorkoutImporter ? 'Hide Importer' : 'Import Workouts'}
+          </button>
+          
+          {showWorkoutImporter && (
+            <WorkoutImporter 
+              onImportComplete={() => setShowWorkoutImporter(false)} 
+            />
+          )}
+        </div>
+      )}
+      
+      {currentView === 'activities' && (
+        <>
+          <h2>Today's Activities ({activities.length})</h2>
+          {activities.length === 0 ? (
+            <p>No activities logged today</p>
+          ) : (
+            <ul>
+              {activities.map((activity) => (
+                <li key={activity.id}>
+                  {activity.type === 'coffee' && (
+                    <>
+                      <strong>☕ {(activity as CoffeeActivity).data.coffeeType}</strong> ({(activity as CoffeeActivity).data.amount}) - {activity.timestamp.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles' })}
+                    </>
+                  )}
+                  {activity.type === 'anxiety' && (
+                    <>
+                      <strong>Anxiety</strong> - {activity.timestamp.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles' })} 
+                      (Intensity: {(activity as AnxietyActivity).data.intensity}/5)
+                      {(activity as AnxietyActivity).data.thought && 
+                        <span style={{ display: 'block', marginLeft: '20px', fontSize: '0.9em', color: '#666' }}>
+                          "{(activity as AnxietyActivity).data.thought}"
+                        </span>
+                      }
+                    </>
+                  )}
+                  {activity.type === 'exercise' && (
+                    <>
+                      <strong>Exercise</strong> - {activity.timestamp.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles' })} ({activity.data.name})
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          
+          <hr />
+          <p>Firebase Status: {error ? '❌ Error' : '✅ Connected'}</p>
+        </>
+      )}
+      
+      {currentView === 'exercises' && (
+        <ExerciseDashboard />
+      )}
 
       {/* Coffee Modal */}
       {showCoffeeModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '5px',
-            width: '300px',
-            maxWidth: '90%'
-          }}>
-            <h2>Add Coffee</h2>
-            <form onSubmit={handleSubmitCoffee}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>
-                  Coffee Type:
-                  <select 
-                    name="coffeeType" 
-                    value={coffeeForm.coffeeType}
-                    onChange={handleCoffeeFormChange}
-                    style={{ 
-                      width: '100%', 
-                      padding: '8px', 
-                      marginTop: '5px',
-                      borderRadius: '4px',
-                      border: '1px solid #ccc'
-                    }}
-                  >
-                    <option value="Espresso">Espresso</option>
-                    <option value="Cold Brew">Cold Brew</option>
-                    <option value="Pour Over">Pour Over</option>
-                  </select>
-                </label>
-              </div>
-              
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>
-                  Amount:
-                  <input 
-                    type="number" 
-                    name="amount" 
-                    value={coffeeForm.amount}
-                    min="1"
-                    onChange={handleCoffeeFormChange}
-                    style={{ 
-                      width: '100%', 
-                      padding: '8px', 
-                      marginTop: '5px',
-                      borderRadius: '4px',
-                      border: '1px solid #ccc'
-                    }}
-                  />
-                </label>
-              </div>
-              
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>
-                  Time:
-                  <input 
-                    type="datetime-local" 
-                    value={coffeeForm.timestamp.toISOString().slice(0, 16)}
-                    onChange={handleDateTimeChange}
-                    style={{ 
-                      width: '100%', 
-                      padding: '8px', 
-                      marginTop: '5px',
-                      borderRadius: '4px',
-                      border: '1px solid #ccc'
-                    }}
-                  />
-                </label>
-              </div>
-              
-              {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <button 
-                  type="button" 
-                  onClick={handleCloseCoffeeModal}
-                  style={{
-                    padding: '8px 15px',
-                    backgroundColor: '#f0f0f0',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  style={{
-                    padding: '8px 15px',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <CoffeeLogger
+          coffeeForm={coffeeForm}
+          onFormChange={handleCoffeeFormChange}
+          onDateTimeChange={handleDateTimeChange}
+          onSubmit={handleSubmitCoffee}
+          onClose={handleCloseCoffeeModal}
+          error={error}
+          formatDateTimeForInput={formatDateTimeForInput}
+        />
       )}
 
       {/* Anxiety Logger Modal */}
