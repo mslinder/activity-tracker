@@ -91,9 +91,9 @@ const WorkoutImporter: React.FC<WorkoutImporterProps> = ({ onImportComplete }) =
               
               console.log(`Found ${columns.length} columns:`, columns);
               
-              if (columns.length < 7) {
+              if (columns.length < 13) {
                 console.error(`Line ${index + 2} has invalid format: only ${columns.length} columns`);
-                throw new Error(`Line ${index + 2} has invalid format: expected 7 columns, got ${columns.length}`);
+                throw new Error(`Line ${index + 2} has invalid format: expected 13 columns, got ${columns.length}`);
               }
               
               // Ensure the date is in YYYY-MM-DD format
@@ -101,7 +101,7 @@ const WorkoutImporter: React.FC<WorkoutImporterProps> = ({ onImportComplete }) =
               if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
                 // Try to parse and format the date
                 try {
-                  const dateParts = dateStr.split(/[\/\-]/);
+                  const dateParts = dateStr.split(/[/\-]/);
                   if (dateParts.length === 3) {
                     // Check if the first part is likely a month (1-12)
                     if (parseInt(dateParts[0]) <= 12 && dateParts[2].length === 4) {
@@ -118,25 +118,21 @@ const WorkoutImporter: React.FC<WorkoutImporterProps> = ({ onImportComplete }) =
                 console.log(`Reformatted date from ${columns[1]} to ${dateStr}`);
               }
               
-              // Ensure plannedSetsRepsDuration is in the correct format (e.g., "3 x 10")
-              let setsReps = columns[4];
-              if (!setsReps.includes('x')) {
-                // Try to infer the format
-                const parts = setsReps.split(/\s+/);
-                if (parts.length >= 2 && !isNaN(Number(parts[0])) && !isNaN(Number(parts[1]))) {
-                  setsReps = `${parts[0]} x ${parts[1]}`;
-                  console.log(`Reformatted sets/reps from ${columns[4]} to ${setsReps}`);
-                }
-              }
-              
               return {
                 workoutName: columns[0],
                 date: dateStr,
                 exerciseName: columns[2],
                 description: columns[3],
-                plannedSetsRepsDuration: setsReps,
-                plannedWeight: columns[5],
-                order: parseInt(columns[6]) || index
+                order: parseInt(columns[4]) || index,
+                Weight: columns[5] || '',
+                'Weight Unit': columns[6] || '',
+                Equipment: columns[7] || '',
+                'Exercise Measure': columns[8] || 'reps',
+                'Set 1 Count': columns[9] || '',
+                'Set 2 Count': columns[10] || '',
+                'Set 3 Count': columns[11] || '',
+                'Set 4 Count': columns[12] || '',
+                'Set 5 Count': columns[13] || ''
               };
             });
           
@@ -178,7 +174,7 @@ const WorkoutImporter: React.FC<WorkoutImporterProps> = ({ onImportComplete }) =
         overflowX: 'auto',
         fontSize: '0.9rem'
       }}>
-        workoutName,date,exerciseName,description,plannedSetsRepsDuration,plannedWeight,order
+        workoutName,date,exerciseName,description,order,Weight,Weight Unit,Equipment,Exercise Measure,Set 1 Count,Set 2 Count,Set 3 Count,Set 4 Count,Set 5 Count
       </pre>
       
       <div style={{ marginTop: '15px' }}>

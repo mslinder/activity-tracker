@@ -4,7 +4,6 @@ import type { Activity, CoffeeActivity, AnxietyActivity } from './firebase.ts';
 import AnxietyLogger from './AnxietyLogger';
 import CoffeeLogger from './CoffeeLogger';
 import ExerciseDashboard from './components/ExerciseDashboard';
-import WorkoutImporter from './components/WorkoutImporter';
 
 function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -12,7 +11,6 @@ function App() {
   const [error, setError] = useState<string>('');
   const [showCoffeeModal, setShowCoffeeModal] = useState(false);
   const [showAnxietyModal, setShowAnxietyModal] = useState(false);
-  const [showWorkoutImporter, setShowWorkoutImporter] = useState(false);
   const [currentView, setCurrentView] = useState<'activities' | 'exercises'>('activities');
   // Helper function to get current time in PST
   const getCurrentPSTTime = () => {
@@ -69,7 +67,7 @@ function App() {
         }
       });
       loadActivities(); // Refresh the list
-    } catch (err) {
+    } catch {
       setError('Failed to add coffee');
     }
   };
@@ -98,7 +96,13 @@ function App() {
   const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dateTimeValue = e.target.value;
     if (dateTimeValue) {
-      const newTimestamp = new Date(dateTimeValue);
+      // Parse datetime-local input format (YYYY-MM-DDTHH:MM) as local time
+      const [datePart, timePart] = dateTimeValue.split('T');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [hours, minutes] = timePart.split(':').map(Number);
+      
+      // Create date with local timezone interpretation
+      const newTimestamp = new Date(year, month - 1, day, hours, minutes);
       setCoffeeForm(prev => ({
         ...prev,
         timestamp: newTimestamp
@@ -132,7 +136,7 @@ function App() {
       setShowCoffeeModal(false);
       loadActivities(); // Refresh the list
       setError('');
-    } catch (err) {
+    } catch {
       setError('Failed to add coffee');
     }
   };
@@ -145,21 +149,6 @@ function App() {
     setShowAnxietyModal(false);
   };
 
-  const handleAddExercise = async () => {
-    const name = prompt('Exercise name:');
-    if (!name) return;
-
-    try {
-      await addActivity({
-        type: 'exercise',
-        timestamp: new Date(),
-        data: { name, completed: true }
-      });
-      loadActivities();
-    } catch (err) {
-      setError('Failed to add exercise');
-    }
-  };
 
   if (loading) return <div>Loading...</div>;
 
@@ -216,35 +205,9 @@ function App() {
           <button onClick={handleOpenAnxietyModal} style={{ marginRight: '10px' }}>
             Log Anxious Thought
           </button>
-          <button onClick={handleAddExercise} style={{ marginRight: '10px' }}>
-            Add Exercise
-          </button>
         </>
       )}
       
-      {currentView === 'exercises' && (
-        <div style={{ marginBottom: '20px' }}>
-          <button 
-            onClick={() => setShowWorkoutImporter(!showWorkoutImporter)}
-            style={{
-              padding: '8px 15px',
-              backgroundColor: '#2196F3',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            {showWorkoutImporter ? 'Hide Importer' : 'Import Workouts'}
-          </button>
-          
-          {showWorkoutImporter && (
-            <WorkoutImporter 
-              onImportComplete={() => setShowWorkoutImporter(false)} 
-            />
-          )}
-        </div>
-      )}
       
       {currentView === 'activities' && (
         <>

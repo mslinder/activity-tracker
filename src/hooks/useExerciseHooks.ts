@@ -35,7 +35,12 @@ export function useWorkoutByDate(date: Date) {
     fetchWorkout();
   }, [date]);
 
-  return { workout, logs, loading, error };
+  const refresh = () => {
+    setError(null);
+    fetchWorkout();
+  };
+
+  return { workout, logs, loading, error, refresh };
 }
 
 // Get available workout dates for navigation
@@ -62,5 +67,10 @@ export function useWorkoutDates() {
     fetchDates();
   }, []);
 
-  return { dates, loading, error };
+  const refresh = () => {
+    setError(null);
+    fetchDates();
+  };
+
+  return { dates, loading, error, refresh };
 }

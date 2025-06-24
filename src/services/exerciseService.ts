@@ -17,8 +17,13 @@ export interface Exercise {
   name: string;
   description: string;
   planned: {
-    setsRepsDuration: string;
-    weight: string;
+    sets: number[];
+    unit: 'reps' | 'seconds' | 'minutes';
+    weight?: {
+      amount: number;
+      unit: 'lb' | 'kg' | 'bodyweight';
+    };
+    equipment?: string;
   };
   order: number;
 }
@@ -32,8 +37,12 @@ export interface Workout {
 
 export interface SetEntry {
   reps?: number;
-  duration?: string;
-  weight?: string;
+  duration?: number;
+  weight?: {
+    amount: number;
+    unit: 'lb' | 'kg';
+  };
+  notes?: string;
 }
 
 export interface ExerciseLog {
@@ -43,11 +52,7 @@ export interface ExerciseLog {
   loggedAt: Date;
   actual: {
     sets: SetEntry[];
-    // Keep legacy field for backward compatibility
-    setsRepsDuration?: string;
-    weight?: string;
   };
-  comments?: string;
 }
 
 export interface CSVRow {
@@ -55,9 +60,16 @@ export interface CSVRow {
   date: string;
   exerciseName: string;
   description: string;
-  plannedSetsRepsDuration: string;
-  plannedWeight: string;
   order: number;
+  Weight?: string;
+  'Weight Unit'?: string;
+  Equipment?: string;
+  'Exercise Measure': string;
+  'Set 1 Count'?: string;
+  'Set 2 Count'?: string;
+  'Set 3 Count'?: string;
+  'Set 4 Count'?: string;
+  'Set 5 Count'?: string;
 }
 
 // Service class
@@ -65,17 +77,16 @@ export class ExerciseService {
   // Get workout for specific date
   async getWorkoutByDate(date: Date): Promise<Workout | null> {
     try {
-      // Format the date as YYYY-MM-DD for string comparison
-      const dateString = date.toISOString().split('T')[0];
-      console.log('Looking for workout on date:', dateString);
+      // Format the date as YYYY-MM-DD in local timezone for string comparison
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
       
       // Get all workouts
       const workoutsSnapshot = await getDocs(collection(db, 'workouts'));
       
-      console.log(`Found ${workoutsSnapshot.size} total workouts in database`);
-      
       if (workoutsSnapshot.empty) {
-        console.log('No workouts found in database');
         return null;
       }
       
@@ -84,25 +95,22 @@ export class ExerciseService {
       
       workoutsSnapshot.forEach(doc => {
         const workoutData = doc.data();
-        console.log('Workout data:', workoutData);
         
         // Check if date field exists and is a valid Timestamp
         if (!workoutData.date || !workoutData.date.toDate) {
-          console.error('Invalid date format in workout:', doc.id, workoutData.date);
           return;
         }
         
         const workoutDate = workoutData.date.toDate();
-        const workoutDateString = workoutDate.toISOString().split('T')[0];
-        
-        console.log(`Comparing workout ${doc.id}: ${workoutData.name} on ${workoutDateString} with requested date ${dateString}`);
+        // Format workout date in local timezone for comparison
+        const workoutYear = workoutDate.getFullYear();
+        const workoutMonth = String(workoutDate.getMonth() + 1).padStart(2, '0');
+        const workoutDay = String(workoutDate.getDate()).padStart(2, '0');
+        const workoutDateString = `${workoutYear}-${workoutMonth}-${workoutDay}`;
         
         if (workoutDateString === dateString) {
-          console.log('Found matching workout:', doc.id);
-          
           // Check if exercises array exists
           if (!workoutData.exercises || !Array.isArray(workoutData.exercises)) {
-            console.error('No exercises array in workout:', doc.id);
             matchingWorkout = {
               id: doc.id,
               name: workoutData.name,
@@ -112,24 +120,20 @@ export class ExerciseService {
             return;
           }
           
-          console.log(`Workout has ${workoutData.exercises.length} exercises`);
-          
           matchingWorkout = {
             id: doc.id,
             name: workoutData.name,
             date: workoutDate,
-            exercises: workoutData.exercises.map((exercise: any, index: number) => {
-              console.log('Processing exercise:', exercise);
+            exercises: workoutData.exercises.map((exercise: Record<string, unknown>, index: number) => {
               return {
                 ...exercise,
                 id: exercise.id || `${doc.id}-${exercise.order || index}`
               };
-            })
+            }) as Exercise[]
           };
         }
       });
       
-      console.log('Final matching workout:', matchingWorkout);
       return matchingWorkout;
     } catch (error) {
       console.error('Error getting workout by date:', error);
@@ -140,26 +144,101 @@ export class ExerciseService {
   // Log what was actually done
   async logExercise(log: Omit<ExerciseLog, 'id'>): Promise<string> {
     try {
-      const docRef = await addDoc(collection(db, 'exerciseLogs'), {
-        ...log,
-        loggedAt: Timestamp.fromDate(log.loggedAt || new Date())
+      // Ensure we have all required fields
+      if (!log.workoutId) {
+        throw new Error('Missing workoutId in log exercise data');
+      }
+      if (!log.exerciseId) {
+        throw new Error('Missing exerciseId in log exercise data');
+      }
+      if (!log.actual || !log.actual.sets) {
+        throw new Error('Missing actual data in log exercise data');
+      }
+
+      // Clean the sets data to remove any undefined values that Firestore doesn't support
+      const cleanSets = log.actual.sets.map(set => {
+        const cleanSet: Record<string, string | number> = {};
+        // Only include properties with defined values
+        if (set.reps !== undefined) cleanSet.reps = set.reps;
+        if (set.duration !== undefined) cleanSet.duration = set.duration;
+        if (set.weight !== undefined) cleanSet.weight = set.weight;
+        return cleanSet;
       });
+
+      // Prepare the data for Firestore with cleaned values
+      const firestoreData = {
+        workoutId: log.workoutId,
+        exerciseId: log.exerciseId,
+        loggedAt: Timestamp.fromDate(log.loggedAt || new Date()),
+        actual: {
+          sets: cleanSets,
+          setsRepsDuration: log.actual.setsRepsDuration || '',
+          weight: log.actual.weight || ''
+        },
+        comments: log.comments || ''
+      };
+      
+      const docRef = await addDoc(collection(db, 'exerciseLogs'), firestoreData);
       return docRef.id;
     } catch (error) {
-      console.error('Error logging exercise:', error);
       throw error;
     }
   }
   
   async updateExerciseLog(id: string, updates: Partial<ExerciseLog>): Promise<void> {
     try {
+      if (!id) {
+        throw new Error('Missing log ID for update');
+      }
+
+      // Create a clean update object without undefined values
+      const cleanUpdates: Record<string, unknown> = {};
+      
+      // Handle loggedAt timestamp if present
+      if (updates.loggedAt) {
+        cleanUpdates.loggedAt = Timestamp.fromDate(updates.loggedAt);
+      }
+      
+      // Handle comments if present
+      if (updates.comments !== undefined) {
+        cleanUpdates.comments = updates.comments || '';
+      }
+      
+      // Handle actual data if present
+      if (updates.actual) {
+        cleanUpdates.actual = {};
+        
+        // Handle sets if present
+        if (updates.actual.sets) {
+          // Clean the sets data to remove any undefined values
+          const cleanSets = updates.actual.sets.map(set => {
+            const cleanSet: Record<string, string | number> = {};
+            if (set.reps !== undefined) cleanSet.reps = set.reps;
+            if (set.duration !== undefined) cleanSet.duration = set.duration;
+            if (set.weight !== undefined) cleanSet.weight = set.weight;
+            return cleanSet;
+          });
+          cleanUpdates.actual.sets = cleanSets;
+        }
+        
+        // Handle legacy format fields
+        if (updates.actual.setsRepsDuration !== undefined) {
+          cleanUpdates.actual.setsRepsDuration = updates.actual.setsRepsDuration || '';
+        }
+        
+        if (updates.actual.weight !== undefined) {
+          cleanUpdates.actual.weight = updates.actual.weight || '';
+        }
+      }
+      
+      // Only proceed if we have updates to make
+      if (Object.keys(cleanUpdates).length === 0) {
+        return;
+      }
+      
       const logRef = doc(db, 'exerciseLogs', id);
-      await updateDoc(logRef, {
-        ...updates,
-        loggedAt: updates.loggedAt ? Timestamp.fromDate(updates.loggedAt) : undefined
-      });
+      await updateDoc(logRef, cleanUpdates);
     } catch (error) {
-      console.error('Error updating exercise log:', error);
       throw error;
     }
   }
@@ -186,7 +265,6 @@ export class ExerciseService {
         };
       });
     } catch (error) {
-      console.error('Error getting exercise logs:', error);
       throw error;
     }
   }
@@ -201,7 +279,6 @@ export class ExerciseService {
         .map(doc => doc.data().date.toDate())
         .sort((a, b) => a.getTime() - b.getTime());
     } catch (error) {
-      console.error('Error getting workout dates:', error);
       throw error;
     }
   }
@@ -209,8 +286,6 @@ export class ExerciseService {
   // Import workouts from CSV
   async importWorkoutFromCSV(csvData: CSVRow[]): Promise<void> {
     try {
-      console.log(`Starting import of ${csvData.length} CSV rows`);
-      
       // Group by date and workout name
       const workoutsByDateAndName: Record<string, {
         workoutName: string;
@@ -222,24 +297,87 @@ export class ExerciseService {
         const dateStr = row.date;
         const key = `${dateStr}-${row.workoutName}`;
         
-        console.log(`Processing row for workout: ${row.workoutName}, date: ${dateStr}, exercise: ${row.exerciseName}`);
-        
         if (!workoutsByDateAndName[key]) {
-          console.log(`Creating new workout group for ${key}`);
+          // Parse date string and create Date at local midnight to avoid timezone issues
+          let date: Date;
+          if (dateStr.includes('/')) {
+            // Handle MM/DD/YYYY format
+            const [month, day, year] = dateStr.split('/').map(Number);
+            date = new Date(year, month - 1, day); // month is 0-indexed in Date constructor
+          } else {
+            // Handle YYYY-MM-DD format
+            const [year, month, day] = dateStr.split('-').map(Number);
+            date = new Date(year, month - 1, day); // month is 0-indexed in Date constructor
+          }
+          
           workoutsByDateAndName[key] = {
             workoutName: row.workoutName,
-            date: new Date(dateStr),
+            date: date,
             exercises: []
           };
         }
         
-        // Ensure the planned data is properly structured
-        const planned = {
-          setsRepsDuration: row.plannedSetsRepsDuration || '',
-          weight: row.plannedWeight || ''
+        // Parse and structure the planned data from the new CSV format
+        const setColumns = [
+          row['Set 1 Count'],
+          row['Set 2 Count'], 
+          row['Set 3 Count'],
+          row['Set 4 Count'],
+          row['Set 5 Count']
+        ];
+        
+        // Filter out empty sets and convert to numbers
+        const sets = setColumns
+          .filter(count => count && count.trim() !== '')
+          .map(count => Number(count.trim()));
+        
+        // Determine unit from Exercise Measure column
+        const measureLower = row['Exercise Measure'].toLowerCase();
+        let unit: 'reps' | 'seconds' | 'minutes';
+        if (measureLower.includes('second')) {
+          unit = 'seconds';
+        } else if (measureLower.includes('minute')) {
+          unit = 'minutes';
+        } else {
+          unit = 'reps';
+        }
+        
+        // Parse weight information
+        let weight: { amount: number; unit: 'lb' | 'kg' | 'bodyweight' } | undefined = undefined;
+        if (row.Weight && row.Weight.trim() !== '') {
+          const weightAmount = Number(row.Weight);
+          const weightUnit = row['Weight Unit']?.toLowerCase() || 'lb';
+          
+          if (weightUnit.includes('lb')) {
+            weight = { amount: weightAmount, unit: 'lb' };
+          } else if (weightUnit.includes('kg')) {
+            weight = { amount: weightAmount, unit: 'kg' };
+          }
+        } else if (row.Equipment && row.Equipment.toLowerCase().includes('bodyweight')) {
+          weight = { amount: 0, unit: 'bodyweight' };
+        } else if (!row.Weight || row.Weight.trim() === '') {
+          weight = { amount: 0, unit: 'bodyweight' };
+        }
+        
+        const planned: {
+          sets: number[];
+          unit: 'reps' | 'seconds' | 'minutes';
+          weight?: { amount: number; unit: 'lb' | 'kg' | 'bodyweight' };
+          equipment?: string;
+        } = {
+          sets,
+          unit
         };
         
-        console.log(`Adding exercise: ${row.exerciseName} with planned data:`, planned);
+        // Only add weight if it exists
+        if (weight) {
+          planned.weight = weight;
+        }
+        
+        // Only add equipment if it exists and is not empty
+        if (row.Equipment && row.Equipment.trim() !== '') {
+          planned.equipment = row.Equipment.trim();
+        }
         
         // Generate a temporary ID for the exercise
         const tempId = `temp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -249,17 +387,13 @@ export class ExerciseService {
           description: row.description || '',
           planned: planned,
           order: row.order,
-          id: tempId // Add a temporary ID that will be replaced when saved
+          id: tempId
         });
       });
-      
-      console.log(`Grouped into ${Object.keys(workoutsByDateAndName).length} workouts`);
       
       // Create workouts in Firestore
       for (const key in workoutsByDateAndName) {
         const workout = workoutsByDateAndName[key];
-        
-        console.log(`Saving workout: ${workout.workoutName} with ${workout.exercises.length} exercises`);
         
         // Ensure exercises are sorted by order
         workout.exercises.sort((a, b) => a.order - b.order);
@@ -270,24 +404,13 @@ export class ExerciseService {
           id: exercise.id || `exercise-${index}`
         }));
         
-        console.log('First exercise in workout:', exercisesWithIds[0]);
-        
-        try {
-          const docRef = await addDoc(collection(db, 'workouts'), {
-            name: workout.workoutName,
-            date: Timestamp.fromDate(workout.date),
-            exercises: exercisesWithIds
-          });
-          console.log(`Successfully added workout with ID: ${docRef.id}`);
-        } catch (e) {
-          console.error('Error adding workout document:', e);
-          throw e;
-        }
+        await addDoc(collection(db, 'workouts'), {
+          name: workout.workoutName,
+          date: Timestamp.fromDate(workout.date),
+          exercises: exercisesWithIds
+        });
       }
-      
-      console.log('CSV import completed successfully');
     } catch (error) {
-      console.error('Error importing workouts from CSV:', error);
       throw error;
     }
   }
