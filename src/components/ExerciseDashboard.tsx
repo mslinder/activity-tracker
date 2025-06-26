@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWorkoutByDate, useWorkoutDates } from '../hooks/useExerciseHooks';
 import { useExerciseForm } from '../hooks/useExerciseForm';
 import DateNavigation from './DateNavigation';
@@ -6,11 +6,19 @@ import ExerciseCard from './ExerciseCard';
 import WorkoutImporter from './WorkoutImporter';
 
 const ExerciseDashboard = (): React.ReactElement => {
+  console.log('ExerciseDashboard: Component starting...');
+  
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showWorkoutImporter, setShowWorkoutImporter] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  
+  const addDebugInfo = (info: string) => {
+    console.log(info);
+    setDebugInfo(prev => [...prev, `${new Date().toISOString()}: ${info}`]);
+  };
+  
   const { workout, logs, loading, error, refresh: refreshWorkout } = useWorkoutByDate(selectedDate);
   const { dates, refresh: refreshDates } = useWorkoutDates();
-  
   const {
     exerciseFormData,
     handleSetChange,
@@ -18,8 +26,15 @@ const ExerciseDashboard = (): React.ReactElement => {
     autoSave
   } = useExerciseForm(workout, logs);
 
+  useEffect(() => {
+    addDebugInfo('ExerciseDashboard: Component mounted');
+    addDebugInfo(`useWorkoutByDate complete - loading: ${loading}, error: ${error}, workout: ${workout?.name || 'none'}`);
+    addDebugInfo(`useWorkoutDates complete - dates: ${dates?.length || 0}`);
+    addDebugInfo(`useExerciseForm complete - exercises: ${Object.keys(exerciseFormData).length}`);
+  }, [loading, error, workout?.name, dates?.length, Object.keys(exerciseFormData).length]);
+
   const goToPreviousDay = () => {
-    if (dates.length === 0) return;
+    if (!dates || dates.length === 0) return;
     
     const currentIndex = dates.findIndex(
       date => date.toDateString() === selectedDate.toDateString()
@@ -36,7 +51,7 @@ const ExerciseDashboard = (): React.ReactElement => {
   };
 
   const goToNextDay = () => {
-    if (dates.length === 0) return;
+    if (!dates || dates.length === 0) return;
     
     const currentIndex = dates.findIndex(
       date => date.toDateString() === selectedDate.toDateString()
@@ -61,10 +76,8 @@ const ExerciseDashboard = (): React.ReactElement => {
     refreshDates();
   };
   
-  const findLogForExercise = (exerciseId: string) => {
-    return logs.find(log => log.exerciseId === exerciseId);
-  };
 
+  
   
   if (loading) {
     return <div>Loading workout data...</div>;
@@ -73,10 +86,21 @@ const ExerciseDashboard = (): React.ReactElement => {
   if (error) {
     return <div>Error loading workout data: {error}</div>;
   }
-
-  return (
+  
+  try {
+    return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
       <h2>Exercise Tracker</h2>
+      
+      {/* Debug Info Panel - Remove this after fixing */}
+      <details style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f0f0f0', fontSize: '12px' }}>
+        <summary>Debug Info (Click to expand)</summary>
+        <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+          {debugInfo.map((info, index) => (
+            <div key={index}>{info}</div>
+          ))}
+        </div>
+      </details>
       
       {/* Import Workouts Section */}
       <div style={{ marginBottom: '20px' }}>
@@ -106,7 +130,7 @@ const ExerciseDashboard = (): React.ReactElement => {
       
       <DateNavigation
         selectedDate={selectedDate}
-        availableDates={dates}
+        availableDates={dates || []}
         onPreviousDay={goToPreviousDay}
         onNextDay={goToNextDay}
       />
@@ -169,7 +193,21 @@ const ExerciseDashboard = (): React.ReactElement => {
       )}
 
     </div>
-  );
+    );
+  } catch (renderError) {
+    return (
+      <div style={{ padding: '20px', color: 'red' }}>
+        <h3>Render Error</h3>
+        <p>Error: {renderError instanceof Error ? renderError.message : String(renderError)}</p>
+        <details>
+          <summary>Debug Info</summary>
+          {debugInfo.map((info, index) => (
+            <div key={index}>{info}</div>
+          ))}
+        </details>
+      </div>
+    );
+  }
 };
 
 export default ExerciseDashboard;

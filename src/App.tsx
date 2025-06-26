@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { addActivity, getTodaysActivities } from './firebase';
-import type { Activity, CoffeeActivity, AnxietyActivity } from './firebase.ts';
+import type { Activity, CoffeeActivity, AnxietyActivity } from './firebase';
 import AnxietyLogger from './AnxietyLogger';
 import CoffeeLogger from './CoffeeLogger';
 import ExerciseDashboard from './components/ExerciseDashboard';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -250,7 +251,9 @@ function App() {
       )}
       
       {currentView === 'exercises' && (
-        <ExerciseDashboard />
+        <ErrorBoundary>
+          <ExerciseDashboard />
+        </ErrorBoundary>
       )}
 
       {/* Coffee Modal */}

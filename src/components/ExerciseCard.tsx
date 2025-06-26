@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import type { Exercise, ExerciseLog, SetEntry } from '../services/exerciseService';
+import type { Exercise, SetEntry } from '../services/exerciseService';
 import SetInputRow from './SetInputRow';
 
 interface ExerciseFormData {
@@ -147,7 +147,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
               set={formData.sets[index] || {}}
               plannedValue={plannedValue}
               unit={exercise.planned.unit}
-              showWeight={exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight'}
+              showWeight={!!(exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight')}
               plannedWeight={exercise.planned.weight}
               onSetChange={(field, value) => handleSetChange(index, field, value)}
             />

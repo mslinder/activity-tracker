@@ -7,6 +7,7 @@ interface ExerciseFormData {
 }
 
 export function useExerciseForm(workout: Workout | null, logs: ExerciseLog[]) {
+  console.log('useExerciseForm: Hook starting with workout:', workout, 'logs:', logs);
   const [exerciseFormData, setExerciseFormData] = useState<Record<string, ExerciseFormData>>({});
   const [savedExerciseIds, setSavedExerciseIds] = useState<string[]>([]);
   const [savingExerciseIds, setSavingExerciseIds] = useState<string[]>([]);

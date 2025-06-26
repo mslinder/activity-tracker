@@ -329,7 +329,7 @@ export class ExerciseService {
         // Filter out empty sets and convert to numbers
         const sets = setColumns
           .filter(count => count && count.trim() !== '')
-          .map(count => Number(count.trim()));
+          .map(count => Number(count!.trim()));
         
         // Determine unit from Exercise Measure column
         const measureLower = row['Exercise Measure'].toLowerCase();
