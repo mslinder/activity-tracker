@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Exercise, SetEntry } from '../services/exerciseService';
+import ExerciseTimer from './ExerciseTimer';
 
 interface ExerciseFormData {
   sets: SetEntry[];
@@ -99,6 +100,25 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
         }}>
           {exercise.description}
         </p>
+      )}
+
+      {/* Timer for duration-based exercises */}
+      {(() => {
+        const isTimeBased = exercise.planned.unit === 'duration' || 
+                          exercise.planned.unit === 'seconds' || 
+                          exercise.planned.unit === 'minutes' ||
+                          exercise.planned.unit === 'sec' ||
+                          exercise.planned.unit === 'min';
+        
+        // Debug log to see what units we're getting
+        console.log(`Exercise: ${exercise.name}, Unit: ${exercise.planned.unit}, IsTimeBased: ${isTimeBased}`);
+        
+        return isTimeBased;
+      })() && (
+        <ExerciseTimer 
+          duration={exercise.planned.sets[0]?.toString() || '0'}
+          onComplete={() => console.log(`Timer completed for ${exercise.name}`)}
+        />
       )}
 
       {/* Sets table - very compact */}
