@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import type { Exercise, SetEntry } from '../services/exerciseService';
 import SetInputRow from './SetInputRow';
+import { Card, FlexContainer, Button } from './styled';
 
 interface ExerciseFormData {
   sets: SetEntry[];
@@ -58,85 +59,195 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: '#fff',
-        borderRadius: '8px',
-        padding: '15px',
-        marginBottom: '15px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}
-    >
-      <h4 
-        style={{ 
-          marginTop: 0, 
-          marginBottom: '10px', 
-          color: '#000',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}
-      >
-        <span>{exercise.name}</span>
-      </h4>
+    <Card elevated style={{
+      background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+      border: '1px solid #e2e8f0',
+      marginBottom: 0
+    }}>
+      <FlexContainer justify="space-between" align="center" style={{ marginBottom: '1rem' }}>
+        <h4 style={{ 
+          margin: 0,
+          fontSize: '1.25rem',
+          fontWeight: 600,
+          color: '#1e293b',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>
+          {exercise.name}
+        </h4>
+      </FlexContainer>
       
       {exercise.description && (
         <p style={{ 
           fontSize: '0.9rem', 
-          color: '#333',
-          marginBottom: '10px'
+          color: '#64748b',
+          marginBottom: '1rem',
+          fontStyle: 'italic',
+          background: '#f1f5f9',
+          padding: '0.75rem',
+          borderRadius: '8px',
+          borderLeft: '3px solid #0ea5e9'
         }}>
           {exercise.description}
         </p>
       )}
       
-      <div style={{ marginBottom: '10px', color: '#000' }}>
-        <strong>Planned:</strong> {formatPlannedDisplay()}
+      <div style={{ 
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '1rem',
+        marginBottom: '1.5rem',
+        padding: '1rem',
+        background: '#f8fafc',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0'
+      }}>
+        <div style={{ 
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span style={{ 
+            fontSize: '1.1rem',
+            color: '#0ea5e9'
+          }}>📋</span>
+          <div>
+            <div style={{ 
+              fontSize: '0.8rem',
+              color: '#64748b',
+              fontWeight: 500,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>Planned</div>
+            <div style={{ 
+              color: '#1e293b',
+              fontWeight: 600
+            }}>{formatPlannedDisplay()}</div>
+          </div>
+        </div>
+        
+        {exercise.planned.weight && (
+          <div style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span style={{ 
+              fontSize: '1.1rem',
+              color: '#10b981'
+            }}>⚖️</span>
+            <div>
+              <div style={{ 
+                fontSize: '0.8rem',
+                color: '#64748b',
+                fontWeight: 500,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>Weight</div>
+              <div style={{ 
+                color: '#1e293b',
+                fontWeight: 600
+              }}>{formatWeightDisplay()}</div>
+            </div>
+          </div>
+        )}
+        
+        {exercise.planned.equipment && (
+          <div style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span style={{ 
+              fontSize: '1.1rem',
+              color: '#f59e0b'
+            }}>🏋️</span>
+            <div>
+              <div style={{ 
+                fontSize: '0.8rem',
+                color: '#64748b',
+                fontWeight: 500,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>Equipment</div>
+              <div style={{ 
+                color: '#1e293b',
+                fontWeight: 600
+              }}>{exercise.planned.equipment}</div>
+            </div>
+          </div>
+        )}
       </div>
-      
-      {exercise.planned.weight && (
-        <div style={{ marginBottom: '10px', color: '#000' }}>
-          <strong>Weight:</strong> {formatWeightDisplay()}
-        </div>
-      )}
-      
-      {exercise.planned.equipment && (
-        <div style={{ marginBottom: '10px', color: '#000' }}>
-          <strong>Equipment:</strong> {exercise.planned.equipment}
-        </div>
-      )}
       
       {/* Sets logging form */}
       <div style={{ 
-        backgroundColor: '#e0e0e0', 
-        padding: '15px', 
-        borderRadius: '8px',
-        marginTop: '15px',
-        marginBottom: '15px'
+        background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+        padding: '1.5rem', 
+        borderRadius: '16px',
+        border: '1px solid #cbd5e1',
+        boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)'
       }}>
-        <div style={{ marginBottom: '15px' }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#000' }}>Log your sets:</div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ 
+            fontWeight: 600, 
+            marginBottom: '1rem', 
+            color: '#1e293b',
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>📝</span>
+            Log your sets:
+          </div>
           
           {/* Column Headers */}
           <div 
             style={{
               display: 'flex',
-              gap: '10px',
-              marginBottom: '8px',
+              gap: '12px',
+              marginBottom: '12px',
               alignItems: 'center',
-              backgroundColor: '#2196f3',
-              padding: '8px',
-              borderRadius: '4px'
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgba(14, 165, 233, 0.3)'
             }}
           >
-            <div style={{ width: '30px', fontWeight: 'bold', color: '#fff' }}>Set</div>
-            <div style={{ flex: 1, textAlign: 'center', fontWeight: 'bold', color: '#fff' }}>
+            <div style={{ 
+              width: '36px', 
+              fontWeight: 600, 
+              color: '#ffffff',
+              textAlign: 'center',
+              fontSize: '0.9rem'
+            }}>Set</div>
+            <div style={{ 
+              flex: 1, 
+              textAlign: 'center', 
+              fontWeight: 600, 
+              color: '#ffffff',
+              fontSize: '0.9rem'
+            }}>
               {exercise.planned.unit === 'reps' ? 'Reps' : 'Duration'}
             </div>
             {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && (
-              <div style={{ flex: 1, textAlign: 'center', fontWeight: 'bold', color: '#fff' }}>Weight</div>
+              <div style={{ 
+                flex: 1, 
+                textAlign: 'center', 
+                fontWeight: 600, 
+                color: '#ffffff',
+                fontSize: '0.9rem'
+              }}>Weight</div>
             )}
-            <div style={{ width: '60px', textAlign: 'center', fontWeight: 'bold', color: '#fff' }}>Notes</div>
+            <div style={{ 
+              width: '70px', 
+              textAlign: 'center', 
+              fontWeight: 600, 
+              color: '#ffffff',
+              fontSize: '0.9rem'
+            }}>Notes</div>
           </div>
           
           {/* Auto-expanded sets based on planned sets */}
@@ -154,24 +265,16 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
           ))}
         </div>
         
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '15px' }}>
-          <button 
+        <FlexContainer justify="flex-end" style={{ marginTop: '1.5rem' }}>
+          <Button 
+            variant="success"
             onClick={handleMarkAsCompleted}
-            style={{
-              backgroundColor: '#4caf50',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
           >
-            Mark as Completed
-          </button>
-        </div>
+            ✓ Mark as Completed
+          </Button>
+        </FlexContainer>
       </div>
-    </div>
+    </Card>
   );
 };
 

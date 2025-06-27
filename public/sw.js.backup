@@ -1,0 +1,74 @@
+// Development mode - completely disable service worker functionality
+const isDevelopment = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+
+if (isDevelopment) {
+  console.log('Service Worker: Running in development mode - all caching disabled');
+  
+  // Install event - immediately skip waiting in development
+  self.addEventListener('install', (event) => {
+    console.log('Service Worker: Development install - skipping waiting');
+    self.skipWaiting();
+  });
+
+  // Activate event - take control immediately but don't cache
+  self.addEventListener('activate', (event) => {
+    console.log('Service Worker: Development activate - claiming clients');
+    self.clients.claim();
+  });
+
+  // Fetch event - completely bypass in development
+  self.addEventListener('fetch', (event) => {
+    // Do nothing - let all requests pass through normally
+    return;
+  });
+
+} else {
+  // Production mode - normal service worker behavior
+  const CACHE_NAME = 'activity-tracker-v1';
+  const urlsToCache = [
+    '/',
+    '/manifest.json',
+    '/icon.svg'
+  ];
+
+  self.addEventListener('install', (event) => {
+    event.waitUntil(
+      caches.open(CACHE_NAME)
+        .then((cache) => {
+          console.log('Service Worker: Opened cache');
+          return cache.addAll(urlsToCache);
+        })
+        .catch((error) => {
+          console.log('Service Worker: Cache failed', error);
+        })
+    );
+  });
+
+  self.addEventListener('fetch', (event) => {
+    event.respondWith(
+      caches.match(event.request)
+        .then((response) => {
+          return response || fetch(event.request);
+        })
+        .catch((error) => {
+          console.log('Service Worker: Fetch failed', error);
+          return fetch(event.request);
+        })
+    );
+  });
+
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+    );
+    self.clients.claim();
+  });
+}

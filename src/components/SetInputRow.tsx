@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { SetEntry } from '../services/exerciseService';
+import { Input, Button } from './styled';
 
 interface SetInputRowProps {
   setNumber: number;
@@ -63,49 +64,52 @@ const SetInputRow: React.FC<SetInputRowProps> = ({
       <div 
         style={{
           display: 'flex',
-          gap: '10px',
-          marginBottom: '5px',
+          gap: '12px',
+          marginBottom: '8px',
           alignItems: 'center',
-          backgroundColor: setNumber % 2 === 0 ? '#f0f0f0' : '#ffffff',
-          padding: '8px',
-          borderRadius: '4px',
-          border: '1px solid #eaeaea'
+          background: setNumber % 2 === 0 ? 
+            'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)' : 
+            'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+          padding: '12px',
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          transition: 'all 200ms ease-in-out'
         }}
       >
         <div style={{ 
-          width: '30px', 
-          fontWeight: 'bold', 
-          backgroundColor: '#2196f3',
-          color: '#fff',
+          width: '36px', 
           height: '36px',
+          fontWeight: 600, 
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+          color: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: '4px'
+          borderRadius: '10px',
+          fontSize: '0.9rem',
+          boxShadow: '0 2px 4px rgba(14, 165, 233, 0.3)'
         }}>
           {setNumber}
         </div>
         
         <div style={{ flex: 1 }}>
-          <input
+          <Input
             type="number"
             value={getCurrentValue()}
             onChange={(e) => handleValueChange(e.target.value)}
             placeholder={`${plannedValue} ${unit === 'reps' ? 'reps' : 'sec'}`}
             style={{
               width: '100%',
-              padding: '8px',
-              border: '1px solid #2196f3',
-              borderRadius: '4px',
-              backgroundColor: '#ffffff',
-              color: '#000000'
+              border: '1px solid #0ea5e9',
+              background: '#ffffff'
             }}
           />
         </div>
         
         {showWeight && (
           <div style={{ flex: 1 }}>
-            <input
+            <Input
               type="number"
               step="0.5"
               value={getCurrentWeight()}
@@ -113,42 +117,37 @@ const SetInputRow: React.FC<SetInputRowProps> = ({
               placeholder={plannedWeight ? `${plannedWeight.amount}${plannedWeight.unit}` : 'Weight'}
               style={{
                 width: '100%',
-                padding: '8px',
-                border: '1px solid #4caf50',
-                borderRadius: '4px',
-                backgroundColor: '#ffffff',
-                color: '#000000'
+                border: '1px solid #10b981',
+                background: '#ffffff'
               }}
             />
           </div>
         )}
         
-        <div style={{ width: '60px', textAlign: 'center' }}>
-          <button
+        <div style={{ width: '70px', textAlign: 'center' }}>
+          <Button
+            variant={showNotes || set.notes ? 'warning' : 'ghost'}
+            size="sm"
             onClick={() => setShowNotes(!showNotes)}
             style={{
-              backgroundColor: showNotes || set.notes ? '#ff9800' : '#e0e0e0',
-              color: showNotes || set.notes ? 'white' : '#666',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '6px 8px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              fontSize: '0.75rem',
+              padding: '0.5rem'
             }}
           >
-            Notes
-          </button>
+            📝
+          </Button>
         </div>
       </div>
       
       {showNotes && (
         <div style={{ 
-          marginLeft: '40px', 
-          marginBottom: '10px',
-          backgroundColor: '#f9f9f9',
-          padding: '8px',
-          borderRadius: '4px',
-          border: '1px solid #ddd'
+          marginLeft: '48px', 
+          marginBottom: '12px',
+          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+          padding: '12px',
+          borderRadius: '12px',
+          border: '1px solid #f59e0b',
+          boxShadow: '0 2px 4px rgba(245, 158, 11, 0.1)'
         }}>
           <textarea
             value={set.notes || ''}
@@ -156,15 +155,20 @@ const SetInputRow: React.FC<SetInputRowProps> = ({
             placeholder="Notes for this set..."
             style={{
               width: '100%',
-              padding: '6px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              minHeight: '60px',
-              backgroundColor: '#ffffff',
-              color: '#000000',
-              fontSize: '12px',
-              resize: 'vertical'
+              padding: '8px 12px',
+              border: '1px solid #d97706',
+              borderRadius: '8px',
+              minHeight: '70px',
+              background: '#ffffff',
+              color: '#1e293b',
+              fontSize: '0.9rem',
+              fontFamily: 'inherit',
+              resize: 'vertical',
+              outline: 'none',
+              transition: 'border-color 200ms ease-in-out'
             }}
+            onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+            onBlur={(e) => e.target.style.borderColor = '#d97706'}
           />
         </div>
       )}

@@ -1,10 +1,26 @@
 import { useState, useEffect } from 'react';
 import { addActivity, getTodaysActivities } from './firebase';
 import type { Activity, CoffeeActivity, AnxietyActivity } from './firebase';
-import AnxietyLogger from './AnxietyLogger';
-import CoffeeLogger from './CoffeeLogger';
+import CompactAnxietyTracker from './components/CompactAnxietyTracker';
+import CompactCoffeeTracker from './components/CompactCoffeeTracker';
+import CompactTabNavigation from './components/CompactTabNavigation';
+import CompactQuickActions from './components/CompactQuickActions';
+import CompactActivityList from './components/CompactActivityList';
 import ExerciseDashboard from './components/ExerciseDashboard';
+import Admin from './components/Admin';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ThemeProvider } from './theme';
+import { 
+  AppContainer, 
+  MainContent, 
+  ContentSection, 
+  PageHeader, 
+  PageTitle, 
+  FlexContainer,
+  Divider
+} from './components/styled';
+import { TabContainer, Tab } from './components/styled';
+import { Button } from './components/styled';
 
 function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -12,7 +28,7 @@ function App() {
   const [error, setError] = useState<string>('');
   const [showCoffeeModal, setShowCoffeeModal] = useState(false);
   const [showAnxietyModal, setShowAnxietyModal] = useState(false);
-  const [currentView, setCurrentView] = useState<'activities' | 'exercises'>('activities');
+  const [currentView, setCurrentView] = useState<'activities' | 'exercises' | 'admin'>('activities');
   // Helper function to get current time in PST
   const getCurrentPSTTime = () => {
     // Simply return the current time as we're already in PST
@@ -154,129 +170,151 @@ function App() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Personal Activity Tracker</h1>
-      
-      {error && <div style={{ color: 'red' }}>Error: {error}</div>}
-      
-      {/* Navigation Tabs */}
-      <div style={{ 
-        display: 'flex', 
-        marginBottom: '20px', 
-        borderBottom: '1px solid #ccc'
-      }}>
-        <button 
-          onClick={() => setCurrentView('activities')}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: currentView === 'activities' ? '#4CAF50' : '#f0f0f0',
-            color: currentView === 'activities' ? 'white' : 'black',
-            border: 'none',
-            borderRadius: '4px 4px 0 0',
-            cursor: 'pointer',
-            marginRight: '5px'
-          }}
-        >
-          Activities
-        </button>
-        <button 
-          onClick={() => setCurrentView('exercises')}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: currentView === 'exercises' ? '#4CAF50' : '#f0f0f0',
-            color: currentView === 'exercises' ? 'white' : 'black',
-            border: 'none',
-            borderRadius: '4px 4px 0 0',
-            cursor: 'pointer'
-          }}
-        >
-          Exercises
-        </button>
-      </div>
-      
-      {currentView === 'activities' && (
-        <>
-          <h2>Quick Log</h2>
-          <button onClick={handleQuickAddCoffee} style={{ marginRight: '10px' }}>
-            Quick Coffee ☕
-          </button>
-          <button onClick={handleOpenCoffeeModal} style={{ marginRight: '10px' }}>
-            Add Coffee Details
-          </button>
-          <button onClick={handleOpenAnxietyModal} style={{ marginRight: '10px' }}>
-            Log Anxious Thought
-          </button>
-        </>
-      )}
-      
-      
-      {currentView === 'activities' && (
-        <>
-          <h2>Today's Activities ({activities.length})</h2>
-          {activities.length === 0 ? (
-            <p>No activities logged today</p>
-          ) : (
-            <ul>
-              {activities.map((activity) => (
-                <li key={activity.id}>
-                  {activity.type === 'coffee' && (
-                    <>
-                      <strong>☕ {(activity as CoffeeActivity).data.coffeeType}</strong> ({(activity as CoffeeActivity).data.amount}) - {activity.timestamp.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles' })}
-                    </>
-                  )}
-                  {activity.type === 'anxiety' && (
-                    <>
-                      <strong>Anxiety</strong> - {activity.timestamp.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles' })} 
-                      (Intensity: {(activity as AnxietyActivity).data.intensity}/5)
-                      {(activity as AnxietyActivity).data.thought && 
-                        <span style={{ display: 'block', marginLeft: '20px', fontSize: '0.9em', color: '#666' }}>
-                          "{(activity as AnxietyActivity).data.thought}"
-                        </span>
-                      }
-                    </>
-                  )}
-                  {activity.type === 'exercise' && (
-                    <>
-                      <strong>Exercise</strong> - {activity.timestamp.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles' })} ({activity.data.name})
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
+    <ThemeProvider>
+      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px' }}>
+          <div style={{
+            padding: '12px',
+            marginBottom: '8px',
+            textAlign: 'center',
+            fontSize: '1.1rem',
+            fontWeight: 600,
+            color: '#333',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            background: '#fff'
+          }}>
+            Activity Tracker
+          </div>
+          
+          {error && (
+            <div style={{
+              border: '1px solid #fecaca',
+              borderRadius: '4px',
+              padding: '8px 12px',
+              background: '#fef2f2',
+              color: '#dc2626',
+              fontSize: '0.85rem',
+              marginBottom: '8px'
+            }}>
+              Error: {error}
+            </div>
           )}
           
-          <hr />
-          <p>Firebase Status: {error ? '❌ Error' : '✅ Connected'}</p>
-        </>
-      )}
+          <CompactTabNavigation 
+            currentView={currentView}
+            onViewChange={setCurrentView}
+          />
       
-      {currentView === 'exercises' && (
-        <ErrorBoundary>
-          <ExerciseDashboard />
-        </ErrorBoundary>
-      )}
+          {currentView === 'activities' && (
+            <CompactQuickActions 
+              onOpenCoffeeModal={handleOpenCoffeeModal}
+              onOpenAnxietyModal={handleOpenAnxietyModal}
+            />
+          )}
+          
+          {currentView === 'activities' && (
+            <>
+              <CompactActivityList activities={activities} />
+              
+              <div style={{
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                padding: '8px 12px',
+                background: '#fff',
+                marginTop: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.8rem',
+                color: '#666'
+              }}>
+                <span>Firebase:</span>
+                <span style={{ 
+                  color: error ? '#dc2626' : '#16a34a',
+                  fontWeight: 500
+                }}>
+                  {error ? '❌ Error' : '✅ Connected'}
+                </span>
+              </div>
+            </>
+          )}
+          
+          {currentView === 'exercises' && (
+            <ErrorBoundary>
+              <ExerciseDashboard />
+            </ErrorBoundary>
+          )}
 
-      {/* Coffee Modal */}
-      {showCoffeeModal && (
-        <CoffeeLogger
-          coffeeForm={coffeeForm}
-          onFormChange={handleCoffeeFormChange}
-          onDateTimeChange={handleDateTimeChange}
-          onSubmit={handleSubmitCoffee}
-          onClose={handleCloseCoffeeModal}
-          error={error}
-          formatDateTimeForInput={formatDateTimeForInput}
-        />
-      )}
+          {currentView === 'admin' && (
+            <ErrorBoundary>
+              <Admin />
+            </ErrorBoundary>
+          )}
 
-      {/* Anxiety Logger Modal */}
-      {showAnxietyModal && (
-        <AnxietyLogger
-          onClose={handleCloseAnxietyModal}
-          onSave={loadActivities}
-        />
-      )}
-    </div>
+          {/* Coffee Modal */}
+          {showCoffeeModal && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: '#ffffff',
+                padding: '20px',
+                borderRadius: '8px',
+                width: '400px',
+                maxWidth: '90%'
+              }}>
+                <CompactCoffeeTracker
+                  coffeeForm={coffeeForm}
+                  onFormChange={handleCoffeeFormChange}
+                  onDateTimeChange={handleDateTimeChange}
+                  onSubmit={handleSubmitCoffee}
+                  onClose={handleCloseCoffeeModal}
+                  error={error}
+                  formatDateTimeForInput={formatDateTimeForInput}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Anxiety Logger Modal */}
+          {showAnxietyModal && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: '#ffffff',
+                padding: '20px',
+                borderRadius: '8px',
+                width: '400px',
+                maxWidth: '90%'
+              }}>
+                <CompactAnxietyTracker
+                  onClose={handleCloseAnxietyModal}
+                  onSave={loadActivities}
+                />
+              </div>
+            </div>
+          )}
+      </div>
+    </ThemeProvider>
   );
 }
 
