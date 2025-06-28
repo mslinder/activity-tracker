@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
 // Replace this with YOUR config from Firebase console
 const firebaseConfig = {
@@ -13,6 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 // Activity types
 export interface BaseActivity {
@@ -105,4 +108,81 @@ export async function getTodaysActivities(): Promise<Activity[]> {
     console.error('Error getting activities:', error);
     throw error;
   }
+}
+
+// Delete an activity
+export async function deleteActivity(activityId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'activities', activityId));
+    console.log('Activity deleted successfully');
+  } catch (error) {
+    console.error('Error deleting activity:', error);
+    throw error;
+  }
+}
+
+// Update an activity
+export async function updateActivity(activityId: string, updates: Partial<Activity>): Promise<void> {
+  try {
+    const activityRef = doc(db, 'activities', activityId);
+    
+    // Convert Date objects to Timestamps for Firebase
+    const firebaseUpdates: any = { ...updates };
+    if (firebaseUpdates.timestamp) {
+      firebaseUpdates.timestamp = Timestamp.fromDate(firebaseUpdates.timestamp);
+    }
+    if (firebaseUpdates.createdAt) {
+      firebaseUpdates.createdAt = Timestamp.fromDate(firebaseUpdates.createdAt);
+    }
+    
+    await updateDoc(activityRef, firebaseUpdates);
+    console.log('Activity updated successfully');
+  } catch (error) {
+    console.error('Error updating activity:', error);
+    throw error;
+  }
+}
+
+// Get all activities (not just today's) for admin management
+export async function getAllActivities(): Promise<Activity[]> {
+  try {
+    const q = query(
+      collection(db, 'activities'),
+      orderBy('timestamp', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: doc.data().timestamp.toDate(),
+      createdAt: doc.data().createdAt.toDate()
+    } as Activity));
+  } catch (error) {
+    console.error('Error getting all activities:', error);
+    throw error;
+  }
+}
+
+// Authentication functions
+export async function signInUser(email: string, password: string): Promise<User> {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return userCredential.user;
+  } catch (error) {
+    console.error('Error signing in:', error);
+    throw error;
+  }
+}
+
+export async function signOutUser(): Promise<void> {
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error('Error signing out:', error);
+    throw error;
+  }
+}
+
+export function onAuthStateChange(callback: (user: User | null) => void): () => void {
+  return onAuthStateChanged(auth, callback);
 }

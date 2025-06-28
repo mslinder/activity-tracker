@@ -4,7 +4,13 @@
       "Bash(npm run lint)",
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(cp:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

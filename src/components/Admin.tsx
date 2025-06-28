@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import WorkoutImporter from './WorkoutImporter';
+import ActivityManager from './ActivityManager';
 
 const Admin = (): React.ReactElement => {
   const [showWorkoutImporter, setShowWorkoutImporter] = useState(false);
@@ -32,6 +33,11 @@ const Admin = (): React.ReactElement => {
             onImportComplete={handleImportComplete}
           />
         )}
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '16px' }}>Activity Management</h3>
+        <ActivityManager />
       </div>
     </div>
   );

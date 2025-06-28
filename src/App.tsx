@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { addActivity, getTodaysActivities } from './firebase';
+import { addActivity, getTodaysActivities, signInUser, signOutUser, onAuthStateChange } from './firebase';
 import type { Activity, CoffeeActivity, AnxietyActivity } from './firebase';
+import type { User } from 'firebase/auth';
 import CompactAnxietyTracker from './components/CompactAnxietyTracker';
 import CompactCoffeeTracker from './components/CompactCoffeeTracker';
 import CompactTabNavigation from './components/CompactTabNavigation';
@@ -29,6 +30,51 @@ function App() {
   const [showCoffeeModal, setShowCoffeeModal] = useState(false);
   const [showAnxietyModal, setShowAnxietyModal] = useState(false);
   const [currentView, setCurrentView] = useState<'activities' | 'exercises' | 'admin'>('activities');
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setAuthError('Please enter both email and password');
+      return;
+    }
+
+    try {
+      setAuthError('');
+      await signInUser(email, password);
+      // User state will be updated by onAuthStateChanged listener
+    } catch (error: any) {
+      setAuthError(error.message || 'Failed to sign in');
+      setPassword('');
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
+  // Listen for authentication state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChange((user) => {
+      setUser(user);
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
   // Helper function to get current time in PST
   const getCurrentPSTTime = () => {
     // Simply return the current time as we're already in PST
@@ -56,9 +102,15 @@ function App() {
   });
 
   // Load today's activities
+  // Only load activities when user is authenticated
   useEffect(() => {
-    loadActivities();
-  }, []);
+    if (user) {
+      loadActivities();
+    } else {
+      setActivities([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   const loadActivities = async () => {
     try {
@@ -167,7 +219,113 @@ function App() {
   };
 
 
-  if (loading) return <div>Loading...</div>;
+  if (authLoading) return <div>Loading...</div>;
+
+  // Show login screen if not authenticated
+  if (!user) {
+    return (
+      <ThemeProvider>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#f5f5f5'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '32px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            maxWidth: '400px',
+            width: '100%',
+            margin: '16px'
+          }}>
+            <h2 style={{
+              textAlign: 'center',
+              marginBottom: '24px',
+              color: '#333',
+              fontSize: '1.5rem'
+            }}>
+              Personal Activity Tracker
+            </h2>
+            
+            <p style={{
+              textAlign: 'center',
+              color: '#666',
+              fontSize: '0.9rem',
+              marginBottom: '24px'
+            }}>
+              Sign in to access your activity data
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '1rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box'
+                }}
+                autoFocus
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '1rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {authError && (
+              <div style={{
+                color: '#dc2626',
+                fontSize: '0.85rem',
+                marginBottom: '16px',
+                textAlign: 'center'
+              }}>
+                {authError}
+              </div>
+            )}
+
+            <button
+              onClick={handleLogin}
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '1rem',
+                backgroundColor: '#2196F3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider>
@@ -175,7 +333,9 @@ function App() {
           <div style={{
             padding: '12px',
             marginBottom: '8px',
-            textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             fontSize: '1.1rem',
             fontWeight: 600,
             color: '#333',
@@ -183,7 +343,21 @@ function App() {
             borderRadius: '4px',
             background: '#fff'
           }}>
-            Activity Tracker
+            <span>Activity Tracker</span>
+            <button
+              onClick={handleSignOut}
+              style={{
+                padding: '4px 8px',
+                fontSize: '0.75rem',
+                backgroundColor: '#666',
+                color: 'white',
+                border: 'none',
+                borderRadius: '2px',
+                cursor: 'pointer'
+              }}
+            >
+              Sign Out
+            </button>
           </div>
           
           {error && (
