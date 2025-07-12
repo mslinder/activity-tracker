@@ -35,7 +35,7 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -328,8 +328,6 @@ function App() {
     );
   }
 
-  const sidebarWidth = sidebarCollapsed ? 60 : 200;
-
   return (
     <ThemeProvider>
       <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -341,11 +339,9 @@ function App() {
         />
         
         <div style={{ 
-          marginLeft: `${sidebarWidth}px`,
           flex: 1,
           padding: '20px',
-          maxWidth: `calc(100vw - ${sidebarWidth}px)`,
-          transition: 'margin-left 0.3s ease, max-width 0.3s ease'
+          width: '100vw'
         }}>
           {error && (
             <div style={{

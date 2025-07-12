@@ -56,11 +56,21 @@ describe('Activity service', () => {
 **When**: Critical business flows that must never break
 **Tools**: Playwright
 
+**Why Playwright is Excellent:**
+- **Cross-browser testing**: Chrome, Firefox, Safari, Edge automatically
+- **Fast and reliable**: Parallel execution, auto-wait for elements
+- **Great debugging**: Screenshots, videos, traces on failure
+- **Mobile testing**: Responsive design validation
+- **Visual regression**: Built-in screenshot comparison
+- **Network mocking**: Intercept API calls for reliable tests
+
 #### Priority Scenarios:
 - **New user onboarding**: First activity logging
 - **Daily workout completion**: Plan → Execute → Review
 - **Data persistence**: Log activity → Refresh → Verify data
 - **PWA functionality**: Install → Offline usage → Sync
+- **Responsive design**: Mobile vs desktop layouts
+- **Cross-browser compatibility**: Ensure Firebase works everywhere
 
 ## Testing Setup Implementation
 
@@ -68,6 +78,10 @@ describe('Activity service', () => {
 ```bash
 # Install testing dependencies
 npm install -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
+
+# Install Playwright (includes browsers)
+npm install -D @playwright/test
+npx playwright install
 ```
 
 ### Phase 2: Configuration
@@ -89,7 +103,7 @@ export default defineConfig({
 ### Phase 3: Test Structure
 ```
 src/
-├── __tests__/
+├── __tests__/           # Unit & integration tests
 │   ├── utils/           # Utility function tests
 │   ├── hooks/           # Custom hook tests
 │   ├── services/        # Firebase service tests
@@ -97,7 +111,47 @@ src/
 ├── __mocks__/
 │   ├── firebase.ts      # Firebase mocking
 │   └── handlers.ts      # MSW API handlers
-└── test-setup.ts        # Global test configuration
+├── test-setup.ts        # Global test configuration
+└── playwright.config.ts # Playwright configuration
+
+tests/                   # E2E tests (separate from src/)
+├── auth.spec.ts
+├── activities.spec.ts
+├── workouts.spec.ts
+└── fixtures/
+    ├── test-data.json
+    └── screenshots/
+```
+
+### Phase 4: Playwright Configuration
+Create `playwright.config.ts`:
+```typescript
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  use: {
+    baseURL: 'http://localhost:5173',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'Mobile Chrome', use: { ...devices['Pixel 5'] } },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+  },
+});
 ```
 
 ## Firebase Testing Strategy
@@ -180,8 +234,29 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
       - run: npm install
-      - run: npm run test
-      - run: npm run test:e2e
+      - run: npm run test              # Vitest unit/integration tests
+      - run: npx playwright install   # Install browsers
+      - run: npm run test:e2e         # Playwright E2E tests
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+```
+
+### Package.json Scripts
+Add these scripts to your `package.json`:
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
+  }
+}
 ```
 
 ### Quality Gates
@@ -204,15 +279,19 @@ jobs:
 - [ ] Add integration tests for main flows
 - [ ] Set up CI pipeline
 
-### Week 3: Component Coverage
-- [ ] Test critical components
-- [ ] Add visual regression tests
-- [ ] Implement E2E tests for key scenarios
+### Week 3: Playwright E2E Tests
+- [ ] Set up Playwright configuration
+- [ ] Write core user journey tests
+- [ ] Add visual regression tests with screenshots
+- [ ] Test PWA functionality and offline behavior
+- [ ] Cross-browser validation
 
-### Week 4: Polish
-- [ ] Achieve 80% code coverage
-- [ ] Document testing patterns
-- [ ] Create developer testing guidelines
+### Week 4: Advanced Testing
+- [ ] Component visual regression testing
+- [ ] Performance testing with Playwright
+- [ ] Accessibility testing
+- [ ] Mobile responsiveness validation
+- [ ] Achieve 80% code coverage overall
 
 ## Best Practices
 
@@ -228,6 +307,70 @@ jobs:
 - **Update tests when features change** - tests are living documentation
 - **Review test coverage regularly** - identify gaps and redundancies
 - **Refactor tests** as codebase evolves
+
+## Playwright Power Features
+
+### Auto-Waiting & Reliability
+```typescript
+// Playwright automatically waits for elements - no more flaky tests!
+await page.click('button:has-text("Add Activity")');
+await page.fill('[data-testid="coffee-amount"]', '2');
+await page.click('button:has-text("Save")');
+
+// Wait for network requests to complete
+await page.waitForResponse('**/activities');
+```
+
+### Visual Testing
+```typescript
+// Screenshot comparison - catch visual regressions
+await page.screenshot({ path: 'activity-dashboard.png' });
+await expect(page).toHaveScreenshot('dashboard-mobile.png');
+```
+
+### Network Interception
+```typescript
+// Mock Firebase API responses for reliable tests
+await page.route('**/firestore/**', route => {
+  route.fulfill({
+    status: 200,
+    body: JSON.stringify({ documents: mockActivities })
+  });
+});
+```
+
+### Cross-Browser Testing
+```typescript
+// Same test runs on Chrome, Firefox, Safari automatically
+test('activity logging works across browsers', async ({ page }) => {
+  // This test runs on all configured browsers
+  await page.goto('/');
+  await page.click('[data-testid="add-coffee"]');
+  await expect(page.locator('.activity-item')).toBeVisible();
+});
+```
+
+### Mobile Testing
+```typescript
+// Test responsive design with real mobile viewports
+test('mobile workout timer', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
+  await page.goto('/exercise');
+  await page.click('[data-testid="start-timer"]');
+  
+  // Test mobile-specific interactions
+  await page.tap('[data-testid="pause-button"]');
+});
+```
+
+### Debugging Features
+```typescript
+// Pause test for debugging
+await page.pause();
+
+// Step-by-step debugging with trace viewer
+// Run: npx playwright test --trace on
+```
 
 ## Specific Firebase Considerations
 
