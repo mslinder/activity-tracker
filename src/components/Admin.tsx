@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import WorkoutImporter from './WorkoutImporter';
 import ActivityManager from './ActivityManager';
 
-const Admin = (): React.ReactElement => {
+interface AdminProps {
+  onSignOut: () => void;
+}
+
+const Admin = ({ onSignOut }: AdminProps): React.ReactElement => {
   const [showWorkoutImporter, setShowWorkoutImporter] = useState(false);
 
   const handleImportComplete = () => {
@@ -11,7 +15,23 @@ const Admin = (): React.ReactElement => {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <h2>Admin Dashboard</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 style={{ margin: 0 }}>Admin Dashboard</h2>
+        <button
+          onClick={onSignOut}
+          style={{
+            padding: '8px 16px',
+            fontSize: '0.9rem',
+            backgroundColor: '#dc2626',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Sign Out
+        </button>
+      </div>
       
       <div style={{ marginBottom: '20px' }}>
         <button 

@@ -257,21 +257,6 @@ const ExerciseTimer: React.FC<ExerciseTimerProps> = ({ duration, onComplete }) =
           >
             🔄 Reset
           </button>
-          
-          <button
-            onClick={() => playBell().catch(error => console.log('Test bell failed:', error))}
-            style={{
-              padding: '4px 8px',
-              fontSize: '0.8rem',
-              backgroundColor: '#9C27B0',
-              color: 'white',
-              border: 'none',
-              borderRadius: '2px',
-              cursor: 'pointer'
-            }}
-          >
-            🔔 Test
-          </button>
         </div>
 
         {/* Completion Status */}

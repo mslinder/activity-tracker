@@ -4,7 +4,7 @@ import type { Activity, CoffeeActivity, AnxietyActivity } from './firebase';
 import type { User } from 'firebase/auth';
 import CompactAnxietyTracker from './components/CompactAnxietyTracker';
 import CompactCoffeeTracker from './components/CompactCoffeeTracker';
-import CompactTabNavigation from './components/CompactTabNavigation';
+import Sidebar from './components/Sidebar';
 import CompactQuickActions from './components/CompactQuickActions';
 import CompactActivityList from './components/CompactActivityList';
 import ExerciseDashboard from './components/ExerciseDashboard';
@@ -35,6 +35,7 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -327,39 +328,25 @@ function App() {
     );
   }
 
+  const sidebarWidth = sidebarCollapsed ? 60 : 200;
+
   return (
     <ThemeProvider>
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px' }}>
-          <div style={{
-            padding: '12px',
-            marginBottom: '8px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: '1.1rem',
-            fontWeight: 600,
-            color: '#333',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            background: '#fff'
-          }}>
-            <span>Activity Tracker</span>
-            <button
-              onClick={handleSignOut}
-              style={{
-                padding: '4px 8px',
-                fontSize: '0.75rem',
-                backgroundColor: '#666',
-                color: 'white',
-                border: 'none',
-                borderRadius: '2px',
-                cursor: 'pointer'
-              }}
-            >
-              Sign Out
-            </button>
-          </div>
-          
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <Sidebar
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+        
+        <div style={{ 
+          marginLeft: `${sidebarWidth}px`,
+          flex: 1,
+          padding: '20px',
+          maxWidth: `calc(100vw - ${sidebarWidth}px)`,
+          transition: 'margin-left 0.3s ease, max-width 0.3s ease'
+        }}>
           {error && (
             <div style={{
               border: '1px solid #fecaca',
@@ -368,65 +355,60 @@ function App() {
               background: '#fef2f2',
               color: '#dc2626',
               fontSize: '0.85rem',
-              marginBottom: '8px'
+              marginBottom: '16px'
             }}>
               Error: {error}
             </div>
           )}
           
-          <CompactTabNavigation 
-            currentView={currentView}
-            onViewChange={setCurrentView}
-          />
-      
-          {currentView === 'activities' && (
-            <CompactQuickActions 
-              onOpenCoffeeModal={handleOpenCoffeeModal}
-              onOpenAnxietyModal={handleOpenAnxietyModal}
-            />
-          )}
-          
-          {currentView === 'activities' && (
-            <>
-              <CompactActivityList activities={activities} />
-              
-              <div style={{
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                padding: '8px 12px',
-                background: '#fff',
-                marginTop: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.8rem',
-                color: '#666'
-              }}>
-                <span>Firebase:</span>
-                <span style={{ 
-                  color: error ? '#dc2626' : '#16a34a',
-                  fontWeight: 500
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            {currentView === 'activities' && (
+              <>
+                <CompactQuickActions 
+                  onOpenCoffeeModal={handleOpenCoffeeModal}
+                  onOpenAnxietyModal={handleOpenAnxietyModal}
+                />
+                <CompactActivityList activities={activities} />
+                
+                <div style={{
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  background: '#fff',
+                  marginTop: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.8rem',
+                  color: '#666'
                 }}>
-                  {error ? '❌ Error' : '✅ Connected'}
-                </span>
-              </div>
-            </>
-          )}
-          
-          {currentView === 'exercises' && (
-            <ErrorBoundary>
-              <ExerciseDashboard />
-            </ErrorBoundary>
-          )}
+                  <span>Firebase:</span>
+                  <span style={{ 
+                    color: error ? '#dc2626' : '#16a34a',
+                    fontWeight: 500
+                  }}>
+                    {error ? '❌ Error' : '✅ Connected'}
+                  </span>
+                </div>
+              </>
+            )}
+            
+            {currentView === 'exercises' && (
+              <ErrorBoundary>
+                <ExerciseDashboard />
+              </ErrorBoundary>
+            )}
 
-          {currentView === 'admin' && (
-            <ErrorBoundary>
-              <Admin />
-            </ErrorBoundary>
-          )}
-
-          {/* Coffee Modal */}
-          {showCoffeeModal && (
+            {currentView === 'admin' && (
+              <ErrorBoundary>
+                <Admin onSignOut={handleSignOut} />
+              </ErrorBoundary>
+            )}
+          </div>
+        </div>
+        
+        {/* Coffee Modal */}
+        {showCoffeeModal && (
             <div style={{
               position: 'fixed',
               top: 0,
@@ -437,7 +419,7 @@ function App() {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              zIndex: 1000
+              zIndex: 2000
             }}>
               <div style={{
                 backgroundColor: '#ffffff',
@@ -457,10 +439,10 @@ function App() {
                 />
               </div>
             </div>
-          )}
+        )}
 
-          {/* Anxiety Logger Modal */}
-          {showAnxietyModal && (
+        {/* Anxiety Logger Modal */}
+        {showAnxietyModal && (
             <div style={{
               position: 'fixed',
               top: 0,
@@ -471,7 +453,7 @@ function App() {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              zIndex: 1000
+              zIndex: 2000
             }}>
               <div style={{
                 backgroundColor: '#ffffff',
@@ -486,7 +468,7 @@ function App() {
                 />
               </div>
             </div>
-          )}
+        )}
       </div>
     </ThemeProvider>
   );

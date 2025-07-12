@@ -23,7 +23,7 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
   onSetCompleted,
   onAutoSave
 }) => {
-  const [notesPopup, setNotesPopup] = useState<{ setIndex: number; notes: string } | null>(null);
+  const [notesPopup, setNotesPopup] = useState<{ notes: string } | null>(null);
   const formatPlannedDisplay = () => {
     const setsDisplay = exercise.planned.sets.join(', ');
     return `${setsDisplay} ${exercise.planned.unit}`;
@@ -37,16 +37,17 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
     return `${exercise.planned.weight.amount}${exercise.planned.weight.unit}`;
   };
 
-  const openNotesPopup = (setIndex: number) => {
+  const openNotesPopup = () => {
+    // Get notes from the first set as general exercise notes
     setNotesPopup({ 
-      setIndex, 
-      notes: formData.sets[setIndex]?.notes || '' 
+      notes: formData.sets[0]?.notes || '' 
     });
   };
 
   const saveNotes = () => {
     if (notesPopup) {
-      onSetChange(notesPopup.setIndex, 'notes', notesPopup.notes);
+      // Save notes to the first set as general exercise notes
+      onSetChange(0, 'notes', notesPopup.notes);
       setNotesPopup(null);
     }
   };
@@ -129,8 +130,8 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
         <div style={{
           display: 'grid',
           gridTemplateColumns: exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' 
-            ? '30px 1fr 1fr 40px 50px' 
-            : '30px 1fr 40px 50px',
+            ? '30px 1fr 1fr 50px' 
+            : '30px 1fr 50px',
           gap: '4px',
           fontSize: '0.75rem',
           fontWeight: 600,
@@ -141,7 +142,6 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
           <div>Set</div>
           <div>{exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}</div>
           {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && <div>Weight</div>}
-          <div>Notes</div>
           <div>Done</div>
         </div>
 
@@ -150,8 +150,8 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
           <div key={index} style={{
             display: 'grid',
             gridTemplateColumns: exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' 
-              ? '30px 1fr 1fr 40px 50px' 
-              : '30px 1fr 40px 50px',
+              ? '30px 1fr 1fr 50px' 
+              : '30px 1fr 50px',
             gap: '4px',
             alignItems: 'center',
             padding: '2px 0'
@@ -188,20 +188,6 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
               />
             )}
             <button
-              onClick={() => openNotesPopup(index)}
-              style={{
-                border: '1px solid #ddd',
-                borderRadius: '2px',
-                padding: '2px 4px',
-                fontSize: '0.7rem',
-                height: '24px',
-                backgroundColor: formData.sets[index]?.notes ? '#e3f2fd' : '#fff',
-                cursor: 'pointer'
-              }}
-            >
-              {formData.sets[index]?.notes ? '📝' : '💬'}
-            </button>
-            <button
               onClick={() => handleSetComplete(index)}
               style={{
                 border: '1px solid #4CAF50',
@@ -220,8 +206,22 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
         ))}
       </div>
 
-      {/* Complete button - small and right-aligned */}
-      <div style={{ textAlign: 'right' }}>
+      {/* Complete and Notes buttons - right-aligned */}
+      <div style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+        <button
+          onClick={openNotesPopup}
+          style={{
+            padding: '4px 8px',
+            fontSize: '0.8rem',
+            backgroundColor: formData.sets[0]?.notes ? '#2196F3' : '#9E9E9E',
+            color: 'white',
+            border: 'none',
+            borderRadius: '2px',
+            cursor: 'pointer'
+          }}
+        >
+          {formData.sets[0]?.notes ? '📝' : '💬'} Notes
+        </button>
         <button 
           onClick={onMarkAsCompleted}
           style={{
@@ -261,12 +261,12 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem' }}>
-              Set {notesPopup.setIndex + 1} Notes
+              Exercise Notes
             </h3>
             <textarea
               value={notesPopup.notes}
               onChange={(e) => setNotesPopup({ ...notesPopup, notes: e.target.value })}
-              placeholder="Add notes for this set..."
+              placeholder="Add notes for this exercise..."
               style={{
                 width: '100%',
                 height: '120px',
