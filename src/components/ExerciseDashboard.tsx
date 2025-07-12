@@ -143,6 +143,9 @@ const ExerciseDashboard = (): React.ReactElement => {
                       onSetCompleted={(setIndex) => 
                         console.log(`Exercise ${exercise.id}, Set ${setIndex + 1} completed`)
                       }
+                      onAutoSave={(setIndex, field, value) => 
+                        autoSave(exercise.id, setIndex, field, value)
+                      }
                     />
                   );
                 })

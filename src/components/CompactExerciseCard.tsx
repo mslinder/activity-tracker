@@ -12,6 +12,7 @@ interface CompactExerciseCardProps {
   onSetChange: (setIndex: number, field: keyof SetEntry, value: string | number | undefined) => void;
   onMarkAsCompleted: () => void;
   onSetCompleted?: (setIndex: number) => void;
+  onAutoSave?: (setIndex: number, field: keyof SetEntry, value: string | number | undefined) => void;
 }
 
 const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
@@ -19,7 +20,8 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
   formData,
   onSetChange,
   onMarkAsCompleted,
-  onSetCompleted
+  onSetCompleted,
+  onAutoSave
 }) => {
   const [notesPopup, setNotesPopup] = useState<{ setIndex: number; notes: string } | null>(null);
   const formatPlannedDisplay = () => {
@@ -158,8 +160,9 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
             <input
               type="text"
               placeholder={plannedValue.toString()}
-              value={formData.sets[index]?.actualReps || formData.sets[index]?.actualDuration || ''}
-              onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'actualReps' : 'actualDuration', e.target.value)}
+              value={formData.sets[index]?.reps || formData.sets[index]?.duration || ''}
+              onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'reps' : 'duration', e.target.value)}
+              onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'reps' : 'duration', e.target.value)}
               style={{
                 border: '1px solid #ddd',
                 borderRadius: '2px',
@@ -172,8 +175,9 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
               <input
                 type="text"
                 placeholder={exercise.planned.weight.amount?.toString() || ''}
-                value={formData.sets[index]?.actualWeight || ''}
-                onChange={(e) => onSetChange(index, 'actualWeight', e.target.value)}
+                value={formData.sets[index]?.weight?.amount || ''}
+                onChange={(e) => onSetChange(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
+                onBlur={(e) => onAutoSave && onAutoSave(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
                 style={{
                   border: '1px solid #ddd',
                   borderRadius: '2px',

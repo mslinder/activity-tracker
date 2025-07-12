@@ -11,6 +11,7 @@ const ExerciseTimer: React.FC<ExerciseTimerProps> = ({ duration, onComplete }) =
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioReadyRef = useRef<boolean>(false);
 
   // Parse duration string to seconds
   const parseDuration = (dur: string): number => {
@@ -28,31 +29,70 @@ const ExerciseTimer: React.FC<ExerciseTimerProps> = ({ duration, onComplete }) =
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Play bell sound using Web Audio API
-  const playBell = () => {
+  // Initialize audio context on user interaction (required for iOS)
+  const initializeAudio = async () => {
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
       
-      const audioContext = audioContextRef.current;
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      // Resume audio context if suspended (iOS requirement)
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Bell-like frequencies
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 1);
+      audioReadyRef.current = true;
     } catch (error) {
-      console.log('Audio not supported');
+      console.log('Audio initialization failed:', error);
+    }
+  };
+
+  // Play bell sound with multiple fallback methods
+  const playBell = async () => {
+    // Method 1: Web Audio API (preferred)
+    if (audioReadyRef.current && audioContextRef.current) {
+      try {
+        const audioContext = audioContextRef.current;
+        
+        // Ensure context is running
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Bell-like frequencies
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 1);
+        return;
+      } catch (error) {
+        console.log('Web Audio API failed:', error);
+      }
+    }
+    
+    // Method 2: HTML5 Audio fallback
+    try {
+      // Create a simple beep using data URL
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvWkcBz+V1/L8dioEL4DQ8t2LNgcZZ7vo5Z0QDC2R2O/MeiwFJHfH8N2QQAoUXrTp66hVFApGn+DyvWkcBz+V1/LMeSoFJHfH8N2QQAoUXrTp66hVFApGn+DyvWkcBz+V1/L8dioEL4DQ8t2LNgcZZ7vo5Z0QDI6n8ePfijEGH6W+4J2GLQgfeLDl3JlHDhGDtOMAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAANiCNQofdJ3t34s+ChF+pdz05YZBDSGCo+7beiUIJHC97t+NOwkTdrTs35JBDSB7s+nfk0ECGX6l9eGGQQ0hgqPu23olCCRwve7fjTsJE3a07N+SQQ0ge7Pp36BBAU6C09zTgSIGKGKz8dqfRgsQgb3V1GwkBzRWp+7lhUICEmyy79WBOwgkdr7p34dCCiBur+zfjz0KE3i37t+XSTQgfaDg25JBDiGDougAAA==');
+      audio.volume = 0.3;
+      await audio.play();
+    } catch (error) {
+      console.log('HTML5 Audio failed:', error);
+      
+      // Method 3: Vibration fallback for mobile
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
     }
   };
 
@@ -70,7 +110,7 @@ const ExerciseTimer: React.FC<ExerciseTimerProps> = ({ duration, onComplete }) =
           if (prev <= 1) {
             setIsRunning(false);
             setIsCompleted(true);
-            playBell();
+            playBell().catch(error => console.log('Bell sound failed:', error));
             onComplete();
             return 0;
           }
@@ -90,7 +130,9 @@ const ExerciseTimer: React.FC<ExerciseTimerProps> = ({ duration, onComplete }) =
     };
   }, [isRunning, timeLeft, onComplete]);
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    // Initialize audio on user interaction (required for iOS)
+    await initializeAudio();
     setIsRunning(true);
   };
 
@@ -214,6 +256,21 @@ const ExerciseTimer: React.FC<ExerciseTimerProps> = ({ duration, onComplete }) =
             }}
           >
             🔄 Reset
+          </button>
+          
+          <button
+            onClick={() => playBell().catch(error => console.log('Test bell failed:', error))}
+            style={{
+              padding: '4px 8px',
+              fontSize: '0.8rem',
+              backgroundColor: '#9C27B0',
+              color: 'white',
+              border: 'none',
+              borderRadius: '2px',
+              cursor: 'pointer'
+            }}
+          >
+            🔔 Test
           </button>
         </div>
 
