@@ -1,5 +1,29 @@
 import { db } from '../firebase.js';
 import { validateWorkout } from './validateWorkout.js';
+// Helper function to detect unilateral exercises
+function detectUnilateralExercise(exerciseName, description) {
+    const text = `${exerciseName} ${description}`.toLowerCase();
+    // Keywords that indicate unilateral exercises
+    const unilateralKeywords = [
+        'single-arm',
+        'single arm',
+        'single-leg',
+        'single leg',
+        'one-arm',
+        'one arm',
+        'one-leg',
+        'one leg',
+        'unilateral',
+        'alternating',
+        'each arm',
+        'each leg',
+        'per arm',
+        'per leg',
+        'each side',
+        'per side'
+    ];
+    return unilateralKeywords.some(keyword => text.includes(keyword));
+}
 export async function createWorkout(workoutData) {
     // Validate the workout first
     const validation = validateWorkout(workoutData);
@@ -24,14 +48,24 @@ export async function createWorkout(workoutData) {
             exercises: [] // We'll add exercises separately with proper IDs
         });
         // Create exercises with proper IDs and workout reference
-        const exercises = workoutData.exercises.map((exercise, index) => ({
-            id: `${workoutRef.id}_exercise_${index + 1}`,
-            workoutId: workoutRef.id,
-            name: exercise.name,
-            description: exercise.description,
-            planned: exercise.planned,
-            order: exercise.order
-        }));
+        const exercises = workoutData.exercises.map((exercise, index) => {
+            // Auto-detect unilateral exercises if not explicitly set
+            const planned = { ...exercise.planned };
+            if (planned.isUnilateral === undefined) {
+                const isUnilateral = detectUnilateralExercise(exercise.name, exercise.description);
+                if (isUnilateral) {
+                    planned.isUnilateral = true;
+                }
+            }
+            return {
+                id: `${workoutRef.id}_exercise_${index + 1}`,
+                workoutId: workoutRef.id,
+                name: exercise.name,
+                description: exercise.description,
+                planned: planned,
+                order: exercise.order
+            };
+        });
         // Update the workout with the exercises
         await workoutRef.update({
             exercises: exercises

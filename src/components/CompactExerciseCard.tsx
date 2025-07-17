@@ -129,9 +129,20 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
         {/* Headers */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' 
-            ? '30px 1fr 1fr 50px' 
-            : '30px 1fr 50px',
+          gridTemplateColumns: (() => {
+            const isUnilateral = exercise.planned.isUnilateral;
+            const hasWeight = exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight';
+            
+            if (isUnilateral && hasWeight) {
+              return '30px 120px 120px 50px'; // Set, Left Group, Right Group, Done
+            } else if (isUnilateral) {
+              return '30px 80px 80px 50px'; // Set, Left Group, Right Group, Done
+            } else if (hasWeight) {
+              return '30px 1fr 1fr 50px'; // Set, Reps/Time, Weight, Done
+            } else {
+              return '30px 1fr 50px'; // Set, Reps/Time, Done
+            }
+          })(),
           gap: '4px',
           fontSize: '0.75rem',
           fontWeight: 600,
@@ -140,8 +151,33 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
           borderBottom: '1px solid #eee'
         }}>
           <div>Set</div>
-          <div>{exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}</div>
-          {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && <div>Weight</div>}
+          {exercise.planned.isUnilateral ? (
+            <>
+              <div style={{
+                textAlign: 'center',
+                backgroundColor: '#f5f5f5',
+                padding: '2px 4px',
+                borderRadius: '3px',
+                border: '1px solid #ccc',
+                fontSize: '0.7rem',
+                fontWeight: 'bold'
+              }}>LEFT</div>
+              <div style={{
+                textAlign: 'center',
+                backgroundColor: '#f5f5f5',
+                padding: '2px 4px',
+                borderRadius: '3px',
+                border: '1px solid #ccc',
+                fontSize: '0.7rem',
+                fontWeight: 'bold'
+              }}>RIGHT</div>
+            </>
+          ) : (
+            <>
+              <div>{exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}</div>
+              {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && <div>Weight</div>}
+            </>
+          )}
           <div>Done</div>
         </div>
 
@@ -149,44 +185,168 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
         {exercise.planned.sets.map((plannedValue, index) => (
           <div key={index} style={{
             display: 'grid',
-            gridTemplateColumns: exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' 
-              ? '30px 1fr 1fr 50px' 
-              : '30px 1fr 50px',
+            gridTemplateColumns: (() => {
+              const isUnilateral = exercise.planned.isUnilateral;
+              const hasWeight = exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight';
+              
+              if (isUnilateral && hasWeight) {
+                return '30px 120px 120px 50px'; // Set, Left Group, Right Group, Done
+              } else if (isUnilateral) {
+                return '30px 80px 80px 50px'; // Set, Left Group, Right Group, Done
+              } else if (hasWeight) {
+                return '30px 1fr 1fr 50px'; // Set, Reps/Time, Weight, Done
+              } else {
+                return '30px 1fr 50px'; // Set, Reps/Time, Done
+              }
+            })(),
             gap: '4px',
             alignItems: 'center',
             padding: '2px 0'
           }}>
             <div style={{ fontSize: '0.8rem', color: '#666' }}>{index + 1}</div>
-            <input
-              type="text"
-              placeholder={plannedValue.toString()}
-              value={formData.sets[index]?.reps || formData.sets[index]?.duration || ''}
-              onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'reps' : 'duration', e.target.value)}
-              onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'reps' : 'duration', e.target.value)}
-              style={{
-                border: '1px solid #ddd',
-                borderRadius: '2px',
-                padding: '2px 4px',
-                fontSize: '0.8rem',
-                height: '24px'
-              }}
-            />
-            {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && (
-              <input
-                type="text"
-                placeholder={exercise.planned.weight.amount?.toString() || ''}
-                value={formData.sets[index]?.weight?.amount || ''}
-                onChange={(e) => onSetChange(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
-                onBlur={(e) => onAutoSave && onAutoSave(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
-                style={{
-                  border: '1px solid #ddd',
-                  borderRadius: '2px',
-                  padding: '2px 4px',
-                  fontSize: '0.8rem',
-                  height: '24px'
-                }}
-              />
+            
+            {exercise.planned.isUnilateral ? (
+              <>
+                {/* Left group - contains left reps/duration and left weight */}
+                <div style={{
+                  display: 'flex',
+                  gap: '2px',
+                  backgroundColor: '#f9f9f9',
+                  padding: '2px',
+                  borderRadius: '3px',
+                  border: '1px solid #ccc',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%'
+                }}>
+                  <input
+                    type="text"
+                    placeholder={plannedValue.toString()}
+                    value={
+                      exercise.planned.unit === 'reps' 
+                        ? formData.sets[index]?.leftReps || ''
+                        : formData.sets[index]?.leftDuration || ''
+                    }
+                    onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'leftReps' : 'leftDuration', e.target.value)}
+                    onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'leftReps' : 'leftDuration', e.target.value)}
+                    style={{
+                      border: 'none',
+                      borderRadius: '2px',
+                      padding: '2px 4px',
+                      fontSize: '0.8rem',
+                      height: '20px',
+                      flex: 1,
+                      minWidth: 0
+                    }}
+                  />
+                  {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && (
+                    <input
+                      type="text"
+                      placeholder={exercise.planned.weight.amount?.toString() || ''}
+                      value={formData.sets[index]?.leftWeight?.amount || ''}
+                      onChange={(e) => onSetChange(index, 'leftWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
+                      onBlur={(e) => onAutoSave && onAutoSave(index, 'leftWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
+                      style={{
+                        border: 'none',
+                        borderRadius: '2px',
+                        padding: '2px 4px',
+                        fontSize: '0.8rem',
+                        height: '20px',
+                        width: '35px'
+                      }}
+                    />
+                  )}
+                </div>
+                
+                {/* Right group - contains right reps/duration and right weight */}
+                <div style={{
+                  display: 'flex',
+                  gap: '2px',
+                  backgroundColor: '#f9f9f9',
+                  padding: '2px',
+                  borderRadius: '3px',
+                  border: '1px solid #ccc',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%'
+                }}>
+                  <input
+                    type="text"
+                    placeholder={plannedValue.toString()}
+                    value={
+                      exercise.planned.unit === 'reps' 
+                        ? formData.sets[index]?.rightReps || ''
+                        : formData.sets[index]?.rightDuration || ''
+                    }
+                    onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'rightReps' : 'rightDuration', e.target.value)}
+                    onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'rightReps' : 'rightDuration', e.target.value)}
+                    style={{
+                      border: 'none',
+                      borderRadius: '2px',
+                      padding: '2px 4px',
+                      fontSize: '0.8rem',
+                      height: '20px',
+                      flex: 1,
+                      minWidth: 0
+                    }}
+                  />
+                  {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && (
+                    <input
+                      type="text"
+                      placeholder={exercise.planned.weight.amount?.toString() || ''}
+                      value={formData.sets[index]?.rightWeight?.amount || ''}
+                      onChange={(e) => onSetChange(index, 'rightWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
+                      onBlur={(e) => onAutoSave && onAutoSave(index, 'rightWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
+                      style={{
+                        border: 'none',
+                        borderRadius: '2px',
+                        padding: '2px 4px',
+                        fontSize: '0.8rem',
+                        height: '20px',
+                        width: '35px'
+                      }}
+                    />
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Bilateral exercise - single input */}
+                <input
+                  type="text"
+                  placeholder={plannedValue.toString()}
+                  value={formData.sets[index]?.reps || formData.sets[index]?.duration || ''}
+                  onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'reps' : 'duration', e.target.value)}
+                  onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'reps' : 'duration', e.target.value)}
+                  style={{
+                    border: '1px solid #ddd',
+                    borderRadius: '2px',
+                    padding: '2px 4px',
+                    fontSize: '0.8rem',
+                    height: '24px'
+                  }}
+                />
+                
+                {/* Weight input for bilateral exercises */}
+                {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && (
+                  <input
+                    type="text"
+                    placeholder={exercise.planned.weight.amount?.toString() || ''}
+                    value={formData.sets[index]?.weight?.amount || ''}
+                    onChange={(e) => onSetChange(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
+                    onBlur={(e) => onAutoSave && onAutoSave(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
+                    style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '2px',
+                      padding: '2px 4px',
+                      fontSize: '0.8rem',
+                      height: '24px'
+                    }}
+                  />
+                )}
+              </>
             )}
+            
             <button
               onClick={() => handleSetComplete(index)}
               style={{

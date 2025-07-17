@@ -126,17 +126,40 @@ export function useExerciseForm(workout: Workout | null, logs: ExerciseLog[]) {
       const completedSets: SetEntry[] = exercise.planned.sets.map((plannedValue) => {
         const setData: SetEntry = {};
         
-        if (exercise.planned.unit === 'reps') {
-          setData.reps = plannedValue;
+        if (exercise.planned.isUnilateral) {
+          // For unilateral exercises, fill both left and right with planned values
+          if (exercise.planned.unit === 'reps') {
+            setData.leftReps = plannedValue;
+            setData.rightReps = plannedValue;
+          } else {
+            setData.leftDuration = plannedValue;
+            setData.rightDuration = plannedValue;
+          }
+          
+          if (exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight') {
+            setData.leftWeight = {
+              amount: exercise.planned.weight.amount,
+              unit: exercise.planned.weight.unit
+            };
+            setData.rightWeight = {
+              amount: exercise.planned.weight.amount,
+              unit: exercise.planned.weight.unit
+            };
+          }
         } else {
-          setData.duration = plannedValue;
-        }
-        
-        if (exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight') {
-          setData.weight = {
-            amount: exercise.planned.weight.amount,
-            unit: exercise.planned.weight.unit
-          };
+          // For bilateral exercises, use the original logic
+          if (exercise.planned.unit === 'reps') {
+            setData.reps = plannedValue;
+          } else {
+            setData.duration = plannedValue;
+          }
+          
+          if (exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight') {
+            setData.weight = {
+              amount: exercise.planned.weight.amount,
+              unit: exercise.planned.weight.unit
+            };
+          }
         }
         
         return setData;

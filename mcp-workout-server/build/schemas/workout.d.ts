@@ -23,6 +23,7 @@ export declare const PlannedExerciseSchema: z.ZodObject<{
         unit: "lb" | "kg" | "bodyweight";
     }>>;
     equipment: z.ZodOptional<z.ZodString>;
+    isUnilateral: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     unit: "reps" | "seconds" | "minutes";
     sets: number[];
@@ -31,6 +32,7 @@ export declare const PlannedExerciseSchema: z.ZodObject<{
         unit: "lb" | "kg" | "bodyweight";
     } | undefined;
     equipment?: string | undefined;
+    isUnilateral?: boolean | undefined;
 }, {
     unit: "reps" | "seconds" | "minutes";
     sets: number[];
@@ -39,6 +41,7 @@ export declare const PlannedExerciseSchema: z.ZodObject<{
         unit: "lb" | "kg" | "bodyweight";
     } | undefined;
     equipment?: string | undefined;
+    isUnilateral?: boolean | undefined;
 }>;
 export declare const ExerciseSchema: z.ZodObject<{
     name: z.ZodString;
@@ -57,6 +60,7 @@ export declare const ExerciseSchema: z.ZodObject<{
             unit: "lb" | "kg" | "bodyweight";
         }>>;
         equipment: z.ZodOptional<z.ZodString>;
+        isUnilateral: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         unit: "reps" | "seconds" | "minutes";
         sets: number[];
@@ -65,6 +69,7 @@ export declare const ExerciseSchema: z.ZodObject<{
             unit: "lb" | "kg" | "bodyweight";
         } | undefined;
         equipment?: string | undefined;
+        isUnilateral?: boolean | undefined;
     }, {
         unit: "reps" | "seconds" | "minutes";
         sets: number[];
@@ -73,6 +78,7 @@ export declare const ExerciseSchema: z.ZodObject<{
             unit: "lb" | "kg" | "bodyweight";
         } | undefined;
         equipment?: string | undefined;
+        isUnilateral?: boolean | undefined;
     }>;
     order: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
@@ -86,6 +92,7 @@ export declare const ExerciseSchema: z.ZodObject<{
             unit: "lb" | "kg" | "bodyweight";
         } | undefined;
         equipment?: string | undefined;
+        isUnilateral?: boolean | undefined;
     };
     order: number;
 }, {
@@ -99,6 +106,7 @@ export declare const ExerciseSchema: z.ZodObject<{
             unit: "lb" | "kg" | "bodyweight";
         } | undefined;
         equipment?: string | undefined;
+        isUnilateral?: boolean | undefined;
     };
     order: number;
 }>;
@@ -122,6 +130,7 @@ export declare const CreateWorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             }>>;
             equipment: z.ZodOptional<z.ZodString>;
+            isUnilateral: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             unit: "reps" | "seconds" | "minutes";
             sets: number[];
@@ -130,6 +139,7 @@ export declare const CreateWorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         }, {
             unit: "reps" | "seconds" | "minutes";
             sets: number[];
@@ -138,6 +148,7 @@ export declare const CreateWorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         }>;
         order: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
@@ -151,6 +162,7 @@ export declare const CreateWorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         };
         order: number;
     }, {
@@ -164,6 +176,7 @@ export declare const CreateWorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         };
         order: number;
     }>, "many">;
@@ -181,6 +194,7 @@ export declare const CreateWorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         };
         order: number;
     }[];
@@ -198,6 +212,7 @@ export declare const CreateWorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         };
         order: number;
     }[];
@@ -223,6 +238,7 @@ export declare const WorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             }>>;
             equipment: z.ZodOptional<z.ZodString>;
+            isUnilateral: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             unit: "reps" | "seconds" | "minutes";
             sets: number[];
@@ -231,6 +247,7 @@ export declare const WorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         }, {
             unit: "reps" | "seconds" | "minutes";
             sets: number[];
@@ -239,6 +256,7 @@ export declare const WorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         }>;
         order: z.ZodNumber;
     } & {
@@ -255,6 +273,7 @@ export declare const WorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         };
         order: number;
         id: string;
@@ -270,6 +289,7 @@ export declare const WorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         };
         order: number;
         id: string;
@@ -289,6 +309,7 @@ export declare const WorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         };
         order: number;
         id: string;
@@ -309,6 +330,7 @@ export declare const WorkoutSchema: z.ZodObject<{
                 unit: "lb" | "kg" | "bodyweight";
             } | undefined;
             equipment?: string | undefined;
+            isUnilateral?: boolean | undefined;
         };
         order: number;
         id: string;

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import WorkoutImporter from './WorkoutImporter';
-import ActivityManager from './ActivityManager';
 
 interface AdminProps {
   onSignOut: () => void;
@@ -55,10 +54,6 @@ const Admin = ({ onSignOut }: AdminProps): React.ReactElement => {
         )}
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '16px' }}>Activity Management</h3>
-        <ActivityManager />
-      </div>
     </div>
   );
 };

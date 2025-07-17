@@ -10,7 +10,9 @@
       "Bash(npm run build:*)",
       "Bash(cp:*)",
       "Bash(node:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

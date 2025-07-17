@@ -6,6 +6,8 @@ import { createWorkout } from './tools/createWorkout.js';
 import { validateWorkout } from './tools/validateWorkout.js';
 import { listWorkouts } from './tools/listWorkouts.js';
 import { getWorkout } from './tools/getWorkout.js';
+import { updateWorkout } from './tools/updateWorkout.js';
+import { deleteWorkout } from './tools/deleteWorkout.js';
 class WorkoutMCPServer {
     server;
     constructor() {
@@ -88,6 +90,10 @@ class WorkoutMCPServer {
                                                     equipment: {
                                                         type: 'string',
                                                         description: 'Equipment needed for the exercise'
+                                                    },
+                                                    isUnilateral: {
+                                                        type: 'boolean',
+                                                        description: 'Whether this exercise requires left/right side tracking (e.g., single-arm rows)'
                                                     }
                                                 },
                                                 required: ['sets', 'unit']
@@ -135,6 +141,87 @@ class WorkoutMCPServer {
                     {
                         name: 'get_workout',
                         description: 'Get details of a specific workout by ID or date.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                identifier: {
+                                    type: 'string',
+                                    description: 'Workout ID or date in YYYY-MM-DD format'
+                                }
+                            },
+                            required: ['identifier']
+                        }
+                    },
+                    {
+                        name: 'update_workout',
+                        description: 'Update an existing workout. Can update name, date, or exercises. Supports partial updates.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                identifier: {
+                                    type: 'string',
+                                    description: 'Workout ID or date in YYYY-MM-DD format'
+                                },
+                                updates: {
+                                    type: 'object',
+                                    description: 'Partial workout data to update',
+                                    properties: {
+                                        name: {
+                                            type: 'string',
+                                            description: 'New workout name'
+                                        },
+                                        date: {
+                                            type: 'string',
+                                            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+                                            description: 'New date in YYYY-MM-DD format'
+                                        },
+                                        exercises: {
+                                            type: 'array',
+                                            description: 'Array of exercises to update/add',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    name: { type: 'string' },
+                                                    description: { type: 'string' },
+                                                    order: { type: 'number' },
+                                                    planned: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            sets: {
+                                                                type: 'array',
+                                                                items: { type: 'number' }
+                                                            },
+                                                            unit: {
+                                                                type: 'string',
+                                                                enum: ['reps', 'seconds', 'minutes']
+                                                            },
+                                                            weight: {
+                                                                type: 'object',
+                                                                properties: {
+                                                                    amount: { type: 'number' },
+                                                                    unit: { type: 'string', enum: ['lb', 'kg', 'bodyweight'] }
+                                                                }
+                                                            },
+                                                            equipment: { type: 'string' },
+                                                            isUnilateral: { type: 'boolean' }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                replaceExercises: {
+                                    type: 'boolean',
+                                    description: 'If true, completely replace exercises array. If false (default), merge/update exercises.'
+                                }
+                            },
+                            required: ['identifier', 'updates']
+                        }
+                    },
+                    {
+                        name: 'delete_workout',
+                        description: 'Delete a workout and all associated exercise logs.',
                         inputSchema: {
                             type: 'object',
                             properties: {
@@ -195,6 +282,34 @@ class WorkoutMCPServer {
                             throw new Error('Arguments required for get_workout');
                         const typedArgs = args;
                         const result = await getWorkout(typedArgs.identifier);
+                        return {
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: JSON.stringify(result, null, 2)
+                                }
+                            ]
+                        };
+                    }
+                    case 'update_workout': {
+                        if (!args)
+                            throw new Error('Arguments required for update_workout');
+                        const typedArgs = args;
+                        const result = await updateWorkout(typedArgs);
+                        return {
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: JSON.stringify(result, null, 2)
+                                }
+                            ]
+                        };
+                    }
+                    case 'delete_workout': {
+                        if (!args)
+                            throw new Error('Arguments required for delete_workout');
+                        const typedArgs = args;
+                        const result = await deleteWorkout(typedArgs.identifier);
                         return {
                             content: [
                                 {

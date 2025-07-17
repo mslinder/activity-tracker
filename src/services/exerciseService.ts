@@ -24,6 +24,7 @@ export interface Exercise {
       unit: 'lb' | 'kg' | 'bodyweight';
     };
     equipment?: string;
+    isUnilateral?: boolean; // Flag for exercises that need left/right tracking
   };
   order: number;
 }
@@ -38,7 +39,21 @@ export interface Workout {
 export interface SetEntry {
   reps?: number;
   duration?: number;
+  // For unilateral exercises, track left and right separately
+  leftReps?: number;
+  rightReps?: number;
+  leftDuration?: number;
+  rightDuration?: number;
   weight?: {
+    amount: number;
+    unit: 'lb' | 'kg';
+  };
+  // For unilateral exercises, weight can be different per side
+  leftWeight?: {
+    amount: number;
+    unit: 'lb' | 'kg';
+  };
+  rightWeight?: {
     amount: number;
     unit: 'lb' | 'kg';
   };
@@ -70,6 +85,33 @@ export interface CSVRow {
   'Set 3 Count'?: string;
   'Set 4 Count'?: string;
   'Set 5 Count'?: string;
+}
+
+// Helper function to detect unilateral exercises
+function detectUnilateralExercise(exerciseName: string, description: string): boolean {
+  const text = `${exerciseName} ${description}`.toLowerCase();
+  
+  // Keywords that indicate unilateral exercises
+  const unilateralKeywords = [
+    'single-arm',
+    'single arm',
+    'single-leg',
+    'single leg',
+    'one-arm',
+    'one arm',
+    'one-leg', 
+    'one leg',
+    'unilateral',
+    'alternating',
+    'each arm',
+    'each leg',
+    'per arm',
+    'per leg',
+    'each side',
+    'per side'
+  ];
+  
+  return unilateralKeywords.some(keyword => text.includes(keyword));
 }
 
 // Service class
@@ -359,15 +401,24 @@ export class ExerciseService {
           weight = { amount: 0, unit: 'bodyweight' };
         }
         
+        // Detect if exercise is unilateral based on name and description
+        const isUnilateral = detectUnilateralExercise(row.Exercise, row.Description || '');
+        
         const planned: {
           sets: number[];
           unit: 'reps' | 'seconds' | 'minutes';
           weight?: { amount: number; unit: 'lb' | 'kg' | 'bodyweight' };
           equipment?: string;
+          isUnilateral?: boolean;
         } = {
           sets,
           unit
         };
+        
+        // Set unilateral flag if detected
+        if (isUnilateral) {
+          planned.isUnilateral = true;
+        }
         
         // Only add weight if it exists
         if (weight) {

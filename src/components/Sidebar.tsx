@@ -2,8 +2,8 @@ import React from 'react';
 import Logo from './Logo';
 
 interface SidebarProps {
-  currentView: 'activities' | 'exercises' | 'admin';
-  onViewChange: (view: 'activities' | 'exercises' | 'admin') => void;
+  currentView: 'exercises' | 'admin';
+  onViewChange: (view: 'exercises' | 'admin') => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -15,19 +15,26 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse
 }) => {
   const navItems = [
-    { key: 'activities', label: 'Activities', icon: '📊' },
     { key: 'exercises', label: 'Exercises', icon: '💪' },
     { key: 'admin', label: 'Admin', icon: '⚙️' }
   ] as const;
 
   if (isCollapsed) {
-    // Minimal collapsed state - just the logo button
+    // Compact header bar with logo
     return (
       <div style={{
         position: 'fixed',
-        top: '20px',
-        left: '20px',
-        zIndex: 1000
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        backgroundColor: '#fff',
+        borderBottom: '1px solid #e5e7eb',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 20px',
+        zIndex: 1000,
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
       }}>
         <button
           onClick={onToggleCollapse}
@@ -36,16 +43,24 @@ const Sidebar: React.FC<SidebarProps> = ({
             border: 'none',
             cursor: 'pointer',
             padding: '8px',
-            borderRadius: '12px',
+            borderRadius: '8px',
             transition: 'all 0.2s ease',
-            backgroundColor: '#fff',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
           title="Expand menu"
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
         >
-          <Logo size={32} />
+          <Logo size={28} />
+          <span style={{
+            fontSize: '1.1rem',
+            fontWeight: 600,
+            color: '#1f2937'
+          }}>
+            Activity Tracker
+          </span>
         </button>
       </div>
     );

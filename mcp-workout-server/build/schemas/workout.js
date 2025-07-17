@@ -9,7 +9,8 @@ export const PlannedExerciseSchema = z.object({
     sets: z.array(z.number().positive()),
     unit: z.enum(['reps', 'seconds', 'minutes']),
     weight: WeightSchema.optional(),
-    equipment: z.string().optional()
+    equipment: z.string().optional(),
+    isUnilateral: z.boolean().optional() // Flag for exercises that need left/right tracking
 });
 // Exercise schema
 export const ExerciseSchema = z.object({

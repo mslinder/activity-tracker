@@ -18,6 +18,7 @@ export declare function createWorkout(workoutData: CreateWorkout): Promise<{
                     unit: "lb" | "kg" | "bodyweight";
                 } | undefined;
                 equipment?: string | undefined;
+                isUnilateral?: boolean | undefined;
             };
             order: number;
         }[];
