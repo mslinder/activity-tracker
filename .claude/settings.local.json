@@ -12,7 +12,8 @@
       "Bash(node:*)",
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "WebFetch(domain:www.trainheroic.com)"
     ],
     "deny": []
   }

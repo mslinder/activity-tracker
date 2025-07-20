@@ -68,36 +68,39 @@ function App() {
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5'
+          backgroundColor: '#f8fafc'
         }}>
           <div style={{
             backgroundColor: 'white',
-            padding: '32px',
-            borderRadius: '8px',
+            padding: '40px',
+            borderRadius: '12px',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            maxWidth: '400px',
+            maxWidth: '440px',
             width: '100%',
-            margin: '16px'
+            margin: '24px'
           }}>
             <h2 style={{
               textAlign: 'center',
-              marginBottom: '24px',
-              color: '#333',
-              fontSize: '1.5rem'
+              marginBottom: '32px',
+              color: '#1e293b',
+              fontSize: '1.75rem',
+              fontWeight: 600,
+              letterSpacing: '-0.025em'
             }}>
               Personal Activity Tracker
             </h2>
             
             <p style={{
               textAlign: 'center',
-              color: '#666',
-              fontSize: '0.9rem',
-              marginBottom: '24px'
+              color: '#64748b',
+              fontSize: '1rem',
+              marginBottom: '32px',
+              lineHeight: '1.5'
             }}>
               Sign in to access your activity data
             </p>
 
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <input
                 type="email"
                 placeholder="Email"
@@ -105,17 +108,18 @@ function App() {
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '12px',
+                  padding: '16px',
                   fontSize: '1rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  boxSizing: 'border-box'
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s ease'
                 }}
                 autoFocus
               />
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <input
                 type="password"
                 placeholder="Password"
@@ -124,11 +128,12 @@ function App() {
                 onKeyPress={handleKeyPress}
                 style={{
                   width: '100%',
-                  padding: '12px',
+                  padding: '16px',
                   fontSize: '1rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  boxSizing: 'border-box'
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s ease'
                 }}
               />
             </div>
@@ -136,9 +141,13 @@ function App() {
             {authError && (
               <div style={{
                 color: '#dc2626',
-                fontSize: '0.85rem',
-                marginBottom: '16px',
-                textAlign: 'center'
+                fontSize: '0.875rem',
+                marginBottom: '20px',
+                textAlign: 'center',
+                backgroundColor: '#fef2f2',
+                padding: '12px',
+                borderRadius: '6px',
+                border: '1px solid #fecaca'
               }}>
                 {authError}
               </div>
@@ -148,13 +157,15 @@ function App() {
               onClick={handleLogin}
               style={{
                 width: '100%',
-                padding: '12px',
+                padding: '16px',
                 fontSize: '1rem',
-                backgroundColor: '#2196F3',
+                backgroundColor: '#2ea3f2',
                 color: 'white',
                 border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 500,
+                transition: 'background-color 0.2s ease'
               }}
             >
               Sign In
@@ -178,12 +189,13 @@ function App() {
             
             <div style={{ 
               flex: 1,
-              padding: '20px',
+              padding: '32px',
               width: '100vw',
-              paddingTop: sidebarCollapsed ? '80px' : '20px',
-              transition: 'padding-top 0.3s ease'
+              paddingTop: sidebarCollapsed ? '96px' : '32px',
+              transition: 'padding-top 0.3s ease',
+              backgroundColor: '#f8fafc'
             }}>
-              <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
                 {currentView === 'exercises' && (
                   <ErrorBoundary>
                     <ExerciseDashboard />

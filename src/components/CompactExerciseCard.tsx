@@ -37,6 +37,15 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
     return `${exercise.planned.weight.amount}${exercise.planned.weight.unit}`;
   };
 
+  // Debug: Log exercise weight info
+  console.log(`Exercise: ${exercise.name}`, {
+    hasWeight: !!exercise.planned.weight,
+    weightUnit: exercise.planned.weight?.unit,
+    weightAmount: exercise.planned.weight?.amount,
+    isBodyweight: exercise.planned.weight?.unit === 'bodyweight',
+    shouldShowWeightFields: exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight'
+  });
+
   const openNotesPopup = () => {
     // Get notes from the first set as general exercise notes
     setNotesPopup({ 
@@ -60,32 +69,36 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
 
   return (
     <div style={{
-      border: '1px solid #ddd',
-      borderRadius: '4px',
-      padding: '12px',
-      marginBottom: '8px',
-      background: '#fff'
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
+      padding: '20px',
+      marginBottom: '16px',
+      background: '#fff',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      transition: 'box-shadow 0.2s ease'
     }}>
       {/* Header - Exercise name and planned info on one line */}
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        marginBottom: '8px'
+        marginBottom: '16px'
       }}>
         <h4 style={{ 
           margin: 0,
-          fontSize: '1rem',
+          fontSize: '1.1rem',
           fontWeight: 600,
-          color: '#333'
+          color: '#1e293b',
+          letterSpacing: '-0.025em'
         }}>
           {exercise.name}
         </h4>
         <div style={{ 
-          fontSize: '0.85rem', 
-          color: '#666',
+          fontSize: '0.875rem', 
+          color: '#64748b',
           display: 'flex',
-          gap: '12px'
+          gap: '16px',
+          fontWeight: 500
         }}>
           <span>{formatPlannedDisplay()}</span>
           {exercise.planned.weight && <span>{formatWeightDisplay()}</span>}
@@ -96,10 +109,11 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
       {/* Description if exists - compact */}
       {exercise.description && (
         <p style={{ 
-          fontSize: '0.8rem', 
-          color: '#666',
-          margin: '0 0 8px 0',
-          fontStyle: 'italic'
+          fontSize: '0.875rem', 
+          color: '#64748b',
+          margin: '0 0 16px 0',
+          fontStyle: 'italic',
+          lineHeight: '1.5'
         }}>
           {exercise.description}
         </p>
@@ -125,57 +139,84 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
       )}
 
       {/* Sets table - very compact */}
-      <div style={{ marginBottom: '8px' }}>
+      <div style={{ marginBottom: '20px' }}>
         {/* Headers */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: (() => {
             const isUnilateral = exercise.planned.isUnilateral;
-            const hasWeight = exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight';
+            // Always show weight fields unless explicitly bodyweight
+            const hasWeight = !exercise.planned.weight || exercise.planned.weight.unit !== 'bodyweight';
             
             if (isUnilateral && hasWeight) {
-              return '30px 120px 120px 50px'; // Set, Left Group, Right Group, Done
+              return '40px 90px 70px 90px 70px 50px'; // Set, Left Reps, Left Weight, Right Reps, Right Weight, Done
             } else if (isUnilateral) {
-              return '30px 80px 80px 50px'; // Set, Left Group, Right Group, Done
+              return '40px 100px 100px 50px'; // Set, Left Reps, Right Reps, Done
             } else if (hasWeight) {
-              return '30px 1fr 1fr 50px'; // Set, Reps/Time, Weight, Done
+              return '40px 100px 100px 50px'; // Set, Reps/Time, Weight, Done
             } else {
-              return '30px 1fr 50px'; // Set, Reps/Time, Done
+              return '40px 1fr 50px'; // Set, Reps/Time, Done
             }
           })(),
-          gap: '4px',
-          fontSize: '0.75rem',
+          gap: '8px',
+          fontSize: '0.8rem',
           fontWeight: 600,
-          color: '#666',
-          padding: '4px 0',
-          borderBottom: '1px solid #eee'
+          color: '#475569',
+          padding: '8px 0',
+          borderBottom: '2px solid #e2e8f0'
         }}>
           <div>Set</div>
           {exercise.planned.isUnilateral ? (
-            <>
-              <div style={{
-                textAlign: 'center',
-                backgroundColor: '#f5f5f5',
-                padding: '2px 4px',
-                borderRadius: '3px',
-                border: '1px solid #ccc',
-                fontSize: '0.7rem',
-                fontWeight: 'bold'
-              }}>LEFT</div>
-              <div style={{
-                textAlign: 'center',
-                backgroundColor: '#f5f5f5',
-                padding: '2px 4px',
-                borderRadius: '3px',
-                border: '1px solid #ccc',
-                fontSize: '0.7rem',
-                fontWeight: 'bold'
-              }}>RIGHT</div>
-            </>
+            (!exercise.planned.weight || exercise.planned.weight.unit !== 'bodyweight') ? (
+              <>
+                <div style={{ textAlign: 'center', fontSize: '0.75rem' }}>
+                  <div style={{ fontWeight: 700, color: '#1e293b' }}>LEFT</div>
+                  <div style={{ color: '#64748b', fontSize: '0.7rem' }}>
+                    {exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', fontSize: '0.75rem' }}>
+                  <div style={{ color: '#64748b', fontSize: '0.7rem' }}>Weight</div>
+                  <div style={{ color: '#64748b', fontSize: '0.65rem' }}>({exercise.planned.weight?.unit || 'lb'})</div>
+                </div>
+                <div style={{ textAlign: 'center', fontSize: '0.75rem' }}>
+                  <div style={{ fontWeight: 700, color: '#1e293b' }}>RIGHT</div>
+                  <div style={{ color: '#64748b', fontSize: '0.7rem' }}>
+                    {exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', fontSize: '0.75rem' }}>
+                  <div style={{ color: '#64748b', fontSize: '0.7rem' }}>Weight</div>
+                  <div style={{ color: '#64748b', fontSize: '0.65rem' }}>({exercise.planned.weight?.unit || 'lb'})</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.75rem' }}>LEFT</div>
+                  <div style={{ color: '#64748b', fontSize: '0.7rem' }}>
+                    {exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.75rem' }}>RIGHT</div>
+                  <div style={{ color: '#64748b', fontSize: '0.7rem' }}>
+                    {exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}
+                  </div>
+                </div>
+              </>
+            )
           ) : (
             <>
-              <div>{exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}</div>
-              {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && <div>Weight</div>}
+              <div style={{ textAlign: 'center' }}>
+                <div>{exercise.planned.unit === 'reps' ? 'Reps' : 'Time'}</div>
+              </div>
+              {(!exercise.planned.weight || exercise.planned.weight.unit !== 'bodyweight') && (
+                <div style={{ textAlign: 'center' }}>
+                  <div>Weight</div>
+                  <div style={{ color: '#64748b', fontSize: '0.7rem' }}>({exercise.planned.weight?.unit || 'lb'})</div>
+                </div>
+              )}
             </>
           )}
           <div>Done</div>
@@ -187,38 +228,29 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
             display: 'grid',
             gridTemplateColumns: (() => {
               const isUnilateral = exercise.planned.isUnilateral;
-              const hasWeight = exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight';
+              // Always show weight fields unless explicitly bodyweight
+              const hasWeight = !exercise.planned.weight || exercise.planned.weight.unit !== 'bodyweight';
               
               if (isUnilateral && hasWeight) {
-                return '30px 120px 120px 50px'; // Set, Left Group, Right Group, Done
+                return '40px 90px 70px 90px 70px 50px'; // Set, Left Reps, Left Weight, Right Reps, Right Weight, Done
               } else if (isUnilateral) {
-                return '30px 80px 80px 50px'; // Set, Left Group, Right Group, Done
+                return '40px 100px 100px 50px'; // Set, Left Reps, Right Reps, Done
               } else if (hasWeight) {
-                return '30px 1fr 1fr 50px'; // Set, Reps/Time, Weight, Done
+                return '40px 100px 100px 50px'; // Set, Reps/Time, Weight, Done
               } else {
-                return '30px 1fr 50px'; // Set, Reps/Time, Done
+                return '40px 1fr 50px'; // Set, Reps/Time, Done
               }
             })(),
-            gap: '4px',
+            gap: '8px',
             alignItems: 'center',
-            padding: '2px 0'
+            padding: '8px 0'
           }}>
-            <div style={{ fontSize: '0.8rem', color: '#666' }}>{index + 1}</div>
+            <div style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 500 }}>{index + 1}</div>
             
             {exercise.planned.isUnilateral ? (
-              <>
-                {/* Left group - contains left reps/duration and left weight */}
-                <div style={{
-                  display: 'flex',
-                  gap: '2px',
-                  backgroundColor: '#f9f9f9',
-                  padding: '2px',
-                  borderRadius: '3px',
-                  border: '1px solid #ccc',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%'
-                }}>
+              (!exercise.planned.weight || exercise.planned.weight.unit !== 'bodyweight') ? (
+                <>
+                  {/* Left Reps/Duration */}
                   <input
                     type="text"
                     placeholder={plannedValue.toString()}
@@ -230,46 +262,37 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
                     onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'leftReps' : 'leftDuration', e.target.value)}
                     onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'leftReps' : 'leftDuration', e.target.value)}
                     style={{
-                      border: 'none',
-                      borderRadius: '2px',
-                      padding: '2px 4px',
-                      fontSize: '0.8rem',
-                      height: '20px',
-                      flex: 1,
-                      minWidth: 0
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '6px 8px',
+                      fontSize: '0.875rem',
+                      height: '36px',
+                      backgroundColor: '#fff',
+                      transition: 'border-color 0.2s ease',
+                      textAlign: 'left'
                     }}
                   />
-                  {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && (
-                    <input
-                      type="text"
-                      placeholder={exercise.planned.weight.amount?.toString() || ''}
-                      value={formData.sets[index]?.leftWeight?.amount || ''}
-                      onChange={(e) => onSetChange(index, 'leftWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
-                      onBlur={(e) => onAutoSave && onAutoSave(index, 'leftWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
-                      style={{
-                        border: 'none',
-                        borderRadius: '2px',
-                        padding: '2px 4px',
-                        fontSize: '0.8rem',
-                        height: '20px',
-                        width: '35px'
-                      }}
-                    />
-                  )}
-                </div>
-                
-                {/* Right group - contains right reps/duration and right weight */}
-                <div style={{
-                  display: 'flex',
-                  gap: '2px',
-                  backgroundColor: '#f9f9f9',
-                  padding: '2px',
-                  borderRadius: '3px',
-                  border: '1px solid #ccc',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%'
-                }}>
+                  
+                  {/* Left Weight */}
+                  <input
+                    type="text"
+                    placeholder={exercise.planned.weight?.amount?.toString() || 'Weight'}
+                    value={formData.sets[index]?.leftWeight?.amount || ''}
+                    onChange={(e) => onSetChange(index, 'leftWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: exercise.planned.weight?.unit || 'lb' } : undefined)}
+                    onBlur={(e) => onAutoSave && onAutoSave(index, 'leftWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: exercise.planned.weight?.unit || 'lb' } : undefined)}
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '6px 8px',
+                      fontSize: '0.875rem',
+                      height: '36px',
+                      backgroundColor: '#fff',
+                      transition: 'border-color 0.2s ease',
+                      textAlign: 'left'
+                    }}
+                  />
+                  
+                  {/* Right Reps/Duration */}
                   <input
                     type="text"
                     placeholder={plannedValue.toString()}
@@ -281,37 +304,88 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
                     onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'rightReps' : 'rightDuration', e.target.value)}
                     onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'rightReps' : 'rightDuration', e.target.value)}
                     style={{
-                      border: 'none',
-                      borderRadius: '2px',
-                      padding: '2px 4px',
-                      fontSize: '0.8rem',
-                      height: '20px',
-                      flex: 1,
-                      minWidth: 0
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '6px 8px',
+                      fontSize: '0.875rem',
+                      height: '36px',
+                      backgroundColor: '#fff',
+                      transition: 'border-color 0.2s ease',
+                      textAlign: 'left'
                     }}
                   />
-                  {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && (
-                    <input
-                      type="text"
-                      placeholder={exercise.planned.weight.amount?.toString() || ''}
-                      value={formData.sets[index]?.rightWeight?.amount || ''}
-                      onChange={(e) => onSetChange(index, 'rightWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
-                      onBlur={(e) => onAutoSave && onAutoSave(index, 'rightWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
-                      style={{
-                        border: 'none',
-                        borderRadius: '2px',
-                        padding: '2px 4px',
-                        fontSize: '0.8rem',
-                        height: '20px',
-                        width: '35px'
-                      }}
-                    />
-                  )}
-                </div>
-              </>
+                  
+                  {/* Right Weight */}
+                  <input
+                    type="text"
+                    placeholder={exercise.planned.weight?.amount?.toString() || 'Weight'}
+                    value={formData.sets[index]?.rightWeight?.amount || ''}
+                    onChange={(e) => onSetChange(index, 'rightWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: exercise.planned.weight?.unit || 'lb' } : undefined)}
+                    onBlur={(e) => onAutoSave && onAutoSave(index, 'rightWeight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: exercise.planned.weight?.unit || 'lb' } : undefined)}
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '6px 8px',
+                      fontSize: '0.875rem',
+                      height: '36px',
+                      backgroundColor: '#fff',
+                      transition: 'border-color 0.2s ease',
+                      textAlign: 'left'
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  {/* Left Reps/Duration - no weight */}
+                  <input
+                    type="text"
+                    placeholder={plannedValue.toString()}
+                    value={
+                      exercise.planned.unit === 'reps' 
+                        ? formData.sets[index]?.leftReps || ''
+                        : formData.sets[index]?.leftDuration || ''
+                    }
+                    onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'leftReps' : 'leftDuration', e.target.value)}
+                    onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'leftReps' : 'leftDuration', e.target.value)}
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontSize: '0.875rem',
+                      height: '36px',
+                      backgroundColor: '#fff',
+                      transition: 'border-color 0.2s ease',
+                      textAlign: 'left'
+                    }}
+                  />
+                  
+                  {/* Right Reps/Duration - no weight */}
+                  <input
+                    type="text"
+                    placeholder={plannedValue.toString()}
+                    value={
+                      exercise.planned.unit === 'reps' 
+                        ? formData.sets[index]?.rightReps || ''
+                        : formData.sets[index]?.rightDuration || ''
+                    }
+                    onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'rightReps' : 'rightDuration', e.target.value)}
+                    onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'rightReps' : 'rightDuration', e.target.value)}
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontSize: '0.875rem',
+                      height: '36px',
+                      backgroundColor: '#fff',
+                      transition: 'border-color 0.2s ease',
+                      textAlign: 'left'
+                    }}
+                  />
+                </>
+              )
             ) : (
               <>
-                {/* Bilateral exercise - single input */}
+                {/* Bilateral exercise - reps/time input */}
                 <input
                   type="text"
                   placeholder={plannedValue.toString()}
@@ -319,28 +393,34 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
                   onChange={(e) => onSetChange(index, exercise.planned.unit === 'reps' ? 'reps' : 'duration', e.target.value)}
                   onBlur={(e) => onAutoSave && onAutoSave(index, exercise.planned.unit === 'reps' ? 'reps' : 'duration', e.target.value)}
                   style={{
-                    border: '1px solid #ddd',
-                    borderRadius: '2px',
-                    padding: '2px 4px',
-                    fontSize: '0.8rem',
-                    height: '24px'
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontSize: '0.875rem',
+                    height: '36px',
+                    backgroundColor: '#fff',
+                    transition: 'border-color 0.2s ease',
+                    textAlign: 'center'
                   }}
                 />
                 
                 {/* Weight input for bilateral exercises */}
-                {exercise.planned.weight && exercise.planned.weight.unit !== 'bodyweight' && (
+                {(!exercise.planned.weight || exercise.planned.weight.unit !== 'bodyweight') && (
                   <input
                     type="text"
-                    placeholder={exercise.planned.weight.amount?.toString() || ''}
+                    placeholder={exercise.planned.weight?.amount?.toString() || 'Weight'}
                     value={formData.sets[index]?.weight?.amount || ''}
-                    onChange={(e) => onSetChange(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
-                    onBlur={(e) => onAutoSave && onAutoSave(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: 'lb' } : undefined)}
+                    onChange={(e) => onSetChange(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: exercise.planned.weight?.unit || 'lb' } : undefined)}
+                    onBlur={(e) => onAutoSave && onAutoSave(index, 'weight', e.target.value ? { amount: parseFloat(e.target.value) || 0, unit: exercise.planned.weight?.unit || 'lb' } : undefined)}
                     style={{
-                      border: '1px solid #ddd',
-                      borderRadius: '2px',
-                      padding: '2px 4px',
-                      fontSize: '0.8rem',
-                      height: '24px'
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontSize: '0.875rem',
+                      height: '36px',
+                      backgroundColor: '#fff',
+                      transition: 'border-color 0.2s ease',
+                      textAlign: 'left'
                     }}
                   />
                 )}
@@ -350,15 +430,22 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
             <button
               onClick={() => handleSetComplete(index)}
               style={{
-                border: '1px solid #4CAF50',
-                borderRadius: '2px',
-                padding: '2px 4px',
-                fontSize: '0.7rem',
-                height: '24px',
-                backgroundColor: '#4CAF50',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '8px',
+                fontSize: '0.875rem',
+                height: '36px',
+                width: '36px',
+                backgroundColor: '#10b981',
                 color: 'white',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
             >
               ✓
             </button>
@@ -367,32 +454,40 @@ const CompactExerciseCard: React.FC<CompactExerciseCardProps> = ({
       </div>
 
       {/* Complete and Notes buttons - right-aligned */}
-      <div style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+      <div style={{ textAlign: 'right', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
         <button
           onClick={openNotesPopup}
           style={{
-            padding: '4px 8px',
-            fontSize: '0.8rem',
-            backgroundColor: formData.sets[0]?.notes ? '#2196F3' : '#9E9E9E',
+            padding: '8px 16px',
+            fontSize: '0.875rem',
+            backgroundColor: formData.sets[0]?.notes ? '#2ea3f2' : '#64748b',
             color: 'white',
             border: 'none',
-            borderRadius: '2px',
-            cursor: 'pointer'
+            borderRadius: '6px',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease',
+            fontWeight: 500
           }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = formData.sets[0]?.notes ? '#1e90ff' : '#475569'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = formData.sets[0]?.notes ? '#2ea3f2' : '#64748b'}
         >
           {formData.sets[0]?.notes ? '📝' : '💬'} Notes
         </button>
         <button 
           onClick={onMarkAsCompleted}
           style={{
-            padding: '4px 8px',
-            fontSize: '0.8rem',
-            backgroundColor: '#4CAF50',
+            padding: '8px 16px',
+            fontSize: '0.875rem',
+            backgroundColor: '#10b981',
             color: 'white',
             border: 'none',
-            borderRadius: '2px',
-            cursor: 'pointer'
+            borderRadius: '6px',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease',
+            fontWeight: 500
           }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
         >
           Complete
         </button>

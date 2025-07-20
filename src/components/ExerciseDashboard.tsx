@@ -107,7 +107,7 @@ const ExerciseDashboard = (): React.ReactElement => {
   
   try {
     return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 16px' }}>
+    <div style={{ maxWidth: '1080px', margin: '0 auto', padding: '0 24px' }}>
       
       <CompactDateNavigation
         selectedDate={selectedDate}
@@ -121,7 +121,7 @@ const ExerciseDashboard = (): React.ReactElement => {
         <>
           <CompactWorkoutHeader workoutName={workout.name} />
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {workout.exercises && workout.exercises.length > 0 ? (
               workout.exercises
                 .sort((a, b) => a.order - b.order)
@@ -151,13 +151,14 @@ const ExerciseDashboard = (): React.ReactElement => {
                 })
             ) : (
               <div style={{
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                padding: '16px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '24px',
                 background: '#fff',
                 textAlign: 'center',
-                fontSize: '0.85rem',
-                color: '#666'
+                fontSize: '0.875rem',
+                color: '#64748b',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
               }}>
                 No exercises in this workout
               </div>
@@ -166,13 +167,14 @@ const ExerciseDashboard = (): React.ReactElement => {
         </>
       ) : (
         <div style={{
-          border: '1px solid #ddd',
-          borderRadius: '4px',
-          padding: '16px',
+          border: '1px solid #e2e8f0',
+          borderRadius: '8px',
+          padding: '24px',
           background: '#fff',
           textAlign: 'center',
-          fontSize: '0.85rem',
-          color: '#666'
+          fontSize: '0.875rem',
+          color: '#64748b',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
         }}>
           📊 No workout planned for this date
         </div>
